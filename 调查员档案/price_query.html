@@ -1,0 +1,437 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>年代物价&武器查询 - 调查员档案库</title>
+    <style>
+        :root {
+            --bg-color: #0a0a0a;
+            --bg-gradient: linear-gradient(135deg, #0a0a0a 0%, #1a1a0a 50%, #2a2a0a 100%);
+            --text-primary: #f5f5dc;
+            --text-secondary: #b8860b;
+            --accent-color: #ffd700;
+            --border-color: rgba(255, 215, 0, 0.2);
+            --item-bg: rgba(255, 255, 255, 0.03);
+            --item-hover: rgba(255, 215, 0, 0.1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: var(--bg-gradient);
+            color: var(--text-primary);
+            font-family: 'Microsoft YaHei', 'PingFang SC', sans-serif;
+            height: 100vh;
+            overflow: hidden; /* 禁止 body 滚动，交给内部容器 */
+        }
+
+        /* 主容器：Flex 布局 */
+        .app-container {
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            max-width: 1200px;
+            margin: 0 auto;
+            position: relative;
+        }
+
+        /* 头部：固定高度 */
+        .fixed-header {
+            flex: 0 0 auto;
+            padding: 20px;
+            background: rgba(10, 10, 10, 0.95);
+            border-bottom: 1px solid var(--border-color);
+            z-index: 10;
+        }
+
+        .header-top {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            margin-bottom: 20px;
+        }
+
+        .back-btn {
+            position: absolute;
+            left: 0;
+            color: var(--accent-color);
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 16px;
+            transition: opacity 0.3s;
+        }
+
+        .back-btn:hover {
+            opacity: 0.8;
+        }
+
+        h1 {
+            font-size: 28px;
+            background: linear-gradient(45deg, #ffd700, #daa520);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-shadow: 0 0 20px rgba(255, 215, 0, 0.2);
+        }
+
+        /* 搜索框 */
+        .search-wrapper {
+            max-width: 600px;
+            margin: 0 auto;
+            position: relative;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 12px 20px 12px 45px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--border-color);
+            border-radius: 25px;
+            color: var(--accent-color);
+            font-size: 16px;
+            outline: none;
+            transition: all 0.3s;
+        }
+
+        .search-input:focus {
+            border-color: var(--accent-color);
+            box-shadow: 0 0 15px rgba(255, 215, 0, 0.1);
+        }
+
+        .search-icon {
+            position: absolute;
+            left: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-secondary);
+        }
+
+        /* 内容区：可滚动 */
+        .scrollable-content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+            
+            /* 自定义滚动条样式 (Chrome/Safari/Edge) */
+            scrollbar-width: thin;
+            scrollbar-color: var(--text-secondary) rgba(0,0,0,0.1);
+        }
+
+        .scrollable-content::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .scrollable-content::-webkit-scrollbar-track {
+            background: rgba(0,0,0,0.1);
+        }
+
+        .scrollable-content::-webkit-scrollbar-thumb {
+            background-color: var(--text-secondary);
+            border-radius: 4px;
+        }
+
+        /* 列表项样式 */
+        .era-section {
+            margin-bottom: 25px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.01);
+            overflow: hidden;
+        }
+
+        .era-header {
+            padding: 15px 20px;
+            background: rgba(255, 215, 0, 0.05);
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            user-select: none;
+        }
+
+        .era-header:hover {
+            background: rgba(255, 215, 0, 0.1);
+        }
+
+        .era-title {
+            font-size: 18px;
+            font-weight: bold;
+            color: var(--accent-color);
+        }
+
+        .era-content {
+            display: none; /* 默认折叠 */
+            padding: 0 20px 20px 20px;
+        }
+
+        .era-section.active .era-content {
+            display: block;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .category-group {
+            margin-top: 20px;
+        }
+
+        .category-title {
+            color: var(--text-secondary);
+            border-bottom: 1px dashed var(--border-color);
+            padding-bottom: 5px;
+            margin-bottom: 15px;
+            font-size: 15px;
+        }
+
+        .items-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 15px;
+        }
+
+        .item-card {
+            background: var(--item-bg);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 6px;
+            padding: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .item-card:hover {
+            background: var(--item-hover);
+            transform: translateY(-2px);
+        }
+
+        .item-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            gap: 10px;
+        }
+
+        .item-name {
+            font-weight: bold;
+            color: #fff;
+        }
+
+        .item-price {
+            color: var(--accent-color);
+            font-family: monospace;
+            white-space: nowrap;
+        }
+
+        .item-note {
+            display: none;
+            margin-top: 10px;
+            font-size: 13px;
+            color: #aaa;
+            padding-top: 8px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            line-height: 1.4;
+        }
+
+        .item-card.expanded .item-note {
+            display: block;
+        }
+
+        /* 动画 */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-5px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* 响应式 */
+        @media (max-width: 768px) {
+            .header-top {
+                flex-direction: column;
+                gap: 10px;
+            }
+            .back-btn {
+                position: static;
+                align-self: flex-start;
+            }
+        }
+        
+        .highlight {
+            background-color: rgba(255, 215, 0, 0.3);
+            color: #fff;
+            padding: 0 2px;
+            border-radius: 2px;
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <header class="fixed-header">
+            <div class="header-top">
+                <a href="index.html" class="back-btn">
+                    <span>←</span> 返回档案库
+                </a>
+                <h1>年代物价&武器查询</h1>
+            </div>
+            <div class="search-wrapper">
+                <span class="search-icon">🔍</span>
+                <input type="text" class="search-input" id="searchInput" placeholder="搜索物品、价格或备注...">
+            </div>
+        </header>
+
+        <main class="scrollable-content" id="resultsContainer">
+            <!-- 内容由 JS 生成 -->
+        </main>
+    </div>
+
+    <!-- 引用数据文件 -->
+    <script src="priceData.js"></script>
+    
+    <script>
+        // 状态管理
+        let currentSearchTerm = '';
+
+        // DOM 元素
+        const container = document.getElementById('resultsContainer');
+        const searchInput = document.getElementById('searchInput');
+
+        // 初始化
+        document.addEventListener('DOMContentLoaded', () => {
+            renderData(priceData);
+            
+            // 搜索监听
+            searchInput.addEventListener('input', (e) => {
+                const term = e.target.value.trim().toLowerCase();
+                renderData(priceData, term);
+            });
+        });
+
+        // 渲染函数
+        function renderData(data, searchTerm = '') {
+            container.innerHTML = '';
+            
+            let hasResults = false;
+
+            data.forEach(eraData => {
+                // 如果有搜索词，需要过滤
+                let filteredCategories = eraData.categories;
+                let isEraMatched = false;
+
+                if (searchTerm) {
+                    filteredCategories = eraData.categories.map(cat => {
+                        const filteredItems = cat.items.filter(item => {
+                            return (item.name && item.name.toLowerCase().includes(searchTerm)) ||
+                                   (item.price && item.price.toLowerCase().includes(searchTerm)) ||
+                                   (item.note && item.note.toLowerCase().includes(searchTerm));
+                        });
+                        return { ...cat, items: filteredItems };
+                    }).filter(cat => cat.items.length > 0);
+                    
+                    // 只要该年代下有匹配的类别，或者年代本身名字匹配（可选），就显示该年代
+                    if (filteredCategories.length > 0) {
+                        isEraMatched = true;
+                    }
+                } else {
+                    isEraMatched = true; // 无搜索词时显示所有
+                }
+
+                if (isEraMatched) {
+                    hasResults = true;
+                    const eraSection = createEraSection(eraData.era, filteredCategories, !!searchTerm);
+                    container.appendChild(eraSection);
+                }
+            });
+
+            if (!hasResults) {
+                container.innerHTML = '<div style="text-align:center; color:#666; padding:40px;">未找到匹配的数据</div>';
+            }
+        }
+
+        // 创建年代区块
+        function createEraSection(eraName, categories, isSearchMode) {
+            const section = document.createElement('div');
+            section.className = 'era-section';
+            if (isSearchMode) section.classList.add('active'); // 搜索模式下默认展开
+
+            const header = document.createElement('div');
+            header.className = 'era-header';
+            header.innerHTML = `
+                <span class="era-title">${eraName}</span>
+                <span class="toggle-icon">${isSearchMode ? '▼' : '▶'}</span>
+            `;
+            
+            // 点击折叠/展开
+            header.addEventListener('click', () => {
+                section.classList.toggle('active');
+                const icon = header.querySelector('.toggle-icon');
+                icon.textContent = section.classList.contains('active') ? '▼' : '▶';
+            });
+
+            const content = document.createElement('div');
+            content.className = 'era-content';
+
+            categories.forEach(cat => {
+                const catGroup = document.createElement('div');
+                catGroup.className = 'category-group';
+                
+                const catTitle = document.createElement('div');
+                catTitle.className = 'category-title';
+                catTitle.textContent = cat.name;
+                catGroup.appendChild(catTitle);
+
+                const grid = document.createElement('div');
+                grid.className = 'items-grid';
+
+                cat.items.forEach(item => {
+                    const card = createItemCard(item);
+                    grid.appendChild(card);
+                });
+
+                catGroup.appendChild(grid);
+                content.appendChild(catGroup);
+            });
+
+            section.appendChild(header);
+            section.appendChild(content);
+
+            return section;
+        }
+
+        // 创建物品卡片
+        function createItemCard(item) {
+            const card = document.createElement('div');
+            card.className = 'item-card';
+            
+            // 高亮处理
+            const nameHtml = highlightText(item.name || '', searchInput.value);
+            const priceHtml = highlightText(item.price || '', searchInput.value);
+            const noteHtml = highlightText(item.note || '暂无备注', searchInput.value);
+
+            card.innerHTML = `
+                <div class="item-header">
+                    <span class="item-name">${nameHtml}</span>
+                    <span class="item-price">${priceHtml}</span>
+                </div>
+                <div class="item-note">${noteHtml}</div>
+            `;
+
+            // 点击展开详情
+            card.addEventListener('click', (e) => {
+                // 如果只是简单的点击，展开备注
+                card.classList.toggle('expanded');
+            });
+
+            return card;
+        }
+
+        // 高亮文本辅助函数
+        function highlightText(text, term) {
+            if (!term || !text) return text;
+            const regex = new RegExp(`(${term})`, 'gi');
+            return text.replace(regex, '<span class="highlight">$1</span>');
+        }
+    </script>
+</body>
+</html>

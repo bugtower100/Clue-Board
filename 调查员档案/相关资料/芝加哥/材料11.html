@@ -1,0 +1,434 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html lang="en">
+
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <title>reddit — the front page of the internet (2009 style demo)</title>
+    <meta http-equiv="X-UA-Compatible" content="IE=7">
+    <style type="text/css">
+        /* ==== 2009-era reddit-inspired layout ==== */
+        html,
+        body {
+            margin: 0;
+            padding: 0;
+            background: #ffffff;
+            color: #000;
+            font: 13px Verdana, Arial, Helvetica, sans-serif;
+        }
+
+        a {
+            color: #336699;
+            text-decoration: none;
+        }
+
+        a:hover {
+            text-decoration: underline;
+        }
+
+        /* Header */
+        #header {
+            background: #cee3f8;
+            border-bottom: 1px solid #a5c6f3;
+        }
+
+        .wrap {
+            width: 980px;
+            margin: 0 auto;
+        }
+
+        #topbar {
+            padding: 6px 0;
+            color: #5f99cf;
+        }
+
+        #logo {
+            float: left;
+            font: italic 28px Georgia, "Times New Roman", serif;
+            color: #ff4500;
+            letter-spacing: 0.5px;
+        }
+
+        #logo span {
+            color: #000;
+            font-style: normal;
+        }
+
+        #tabmenu {
+            float: left;
+            margin-left: 18px;
+            padding-top: 6px;
+        }
+
+        #tabmenu a {
+            display: inline-block;
+            padding: 4px 8px;
+            margin-right: 4px;
+            border: 1px solid #a5c6f3;
+            background: #dae9fb;
+            color: #336699;
+        }
+
+        #tabmenu a.active {
+            background: #fff;
+            border-bottom: 1px solid #fff;
+            font-weight: bold;
+        }
+
+        #userbar {
+            float: right;
+            color: #333;
+            padding-top: 4px;
+        }
+
+        #userbar a {
+            margin-left: 6px;
+        }
+
+        .clear {
+            clear: both;
+            height: 0;
+            overflow: hidden;
+        }
+
+        /* Subheader */
+        #subheader {
+            background: #eff7ff;
+            border-bottom: 1px solid #a5c6f3;
+        }
+
+        #subheader .controls {
+            padding: 6px 0;
+            font-size: 11px;
+            color: #666;
+        }
+
+        #subheader .controls .left {
+            float: left;
+        }
+
+        #subheader .controls .right {
+            float: right;
+        }
+
+        .btn {
+            display: inline-block;
+            padding: 3px 7px;
+            border: 1px solid #a5c6f3;
+            background: #fff;
+            color: #336699;
+            text-decoration: none;
+        }
+
+        .btn:hover {
+            background: #f6fbff;
+        }
+
+        /* Layout */
+        #content {
+            padding: 12px 0 28px;
+        }
+
+        #siteTable {
+            float: left;
+            width: 650px;
+        }
+
+        #sidebar {
+            float: right;
+            width: 300px;
+        }
+
+        /* Posts */
+        .thing {
+            border-bottom: 1px solid #eee;
+            padding: 8px 0;
+        }
+
+        .rank {
+            float: left;
+            width: 24px;
+            text-align: right;
+            color: #aaa;
+            padding-top: 2px;
+        }
+
+        .midcol {
+            float: left;
+            width: 40px;
+            text-align: center;
+        }
+
+        .entry {
+            margin-left: 110px;
+        }
+
+        .title {
+            font-size: 16px;
+            font-weight: normal;
+        }
+
+        .domain {
+            color: #888;
+            font-size: 11px;
+        }
+
+        .tagline {
+            margin: 3px 0 4px;
+            color: #888;
+            font-size: 11px;
+        }
+
+        .buttons a {
+            font-size: 11px;
+            color: #888;
+            margin-right: 8px;
+        }
+
+        .buttons a.comments {
+            color: #336699;
+        }
+
+        /* Vote arrows */
+        .arrow {
+            width: 0;
+            height: 0;
+            border-left: 9px solid transparent;
+            border-right: 9px solid transparent;
+            margin: 3px auto;
+            cursor: pointer;
+        }
+
+        .up {
+            border-bottom: 14px solid #c6c6c6;
+        }
+
+        .upmod {
+            border-bottom-color: #ff8b60;
+        }
+
+        .down {
+            border-top: 14px solid #c6c6c6;
+        }
+
+        .downmod {
+            border-top-color: #9494ff;
+        }
+
+        .score {
+            font: bold 12px Verdana, Arial, sans-serif;
+            color: #c6c6c6;
+        }
+
+        .score.liked {
+            color: #ff8b60;
+        }
+
+        .score.disliked {
+            color: #9494ff;
+        }
+
+        /* Sidebar */
+        .sidebox {
+            border: 1px solid #d8d8d8;
+            margin-bottom: 12px;
+            background: #f8f8f8;
+        }
+
+        .sidebox h3 {
+            margin: 0;
+            padding: 8px;
+            background: #e9e9e9;
+            border-bottom: 1px solid #d8d8d8;
+            font-size: 12px;
+            text-transform: uppercase;
+            color: #555;
+        }
+
+        .sidebox .inner {
+            padding: 8px;
+        }
+
+        #search {
+            width: 100%;
+            box-sizing: border-box;
+            padding: 5px;
+            border: 1px solid #a5c6f3;
+        }
+
+        .ad {
+            width: 300px;
+            height: 250px;
+            background: #fff;
+            border: 1px dashed #bbb;
+            text-align: center;
+            line-height: 250px;
+            color: #bbb;
+            font-size: 18px;
+        }
+
+        /* Footer */
+        #footer {
+            border-top: 1px solid #e5e5e5;
+            color: #888;
+            padding: 16px 0 40px;
+            font-size: 11px;
+        }
+
+        #footer a {
+            color: #888;
+        }
+
+        /* Comments */
+        #comments {
+            margin-top: 20px;
+        }
+
+        .comment {
+            border-left: 2px solid #ddd;
+            margin: 8px 0;
+            padding-left: 8px;
+            font-size: 12px;
+            background: #fffbe0;
+        }
+
+        .comment .tagline {
+            font-size: 10px;
+            color: #666;
+            margin-bottom: 2px;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Header -->
+    <div id="header">
+        <div class="wrap">
+            <div id="topbar" class="clearfix">
+                <div id="logo">reddit <span>beta</span></div>
+                <div id="tabmenu">
+                    <a href="#" class="active">hot</a>
+                    <a href="#">new</a>
+                    <a href="#">rising</a>
+                    <a href="#">controversial</a>
+                    <a href="#">top</a>
+                </div>
+                <div id="userbar">
+                    want to join? <a href="#">login</a> or <a href="#">register</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Content -->
+    <div class="wrap" id="content" class="clearfix">
+        <div id="siteTable">
+            <div class="thing clearfix" id="thing_t3_1">
+                <div class="rank">1</div>
+                <div class="midcol">
+                    <div class="arrow up upmod" title="upvote"></div>
+                    <div class="score liked">421</div>
+                    <div class="arrow down" title="downvote"></div>
+                </div>
+                <div class="entry">
+                    <p class="title"><a href="#">Unfinished Business: The Union Theatre Fire and Chicago's Shadow</a>
+                        <span class="domain">(self.Chicago)</span></p>
+                    <p style="color: #666; font-size: 12px; margin: 5px 0; font-style: italic; padding-left: 20px;">未竟之事：联合剧院火灾与芝加哥的阴影</p>
+                    <p class="tagline">submitted Mar 2008 by <a href="#">MysterySeeker</a></p>
+                    <p class="buttons">
+                        <a href="#" class="comments">5 comments</a>
+                        <a href="#">share</a>
+                        <a href="#">save</a>
+                        <a href="#">report</a>
+                    </p>
+
+                    <!-- Comments -->
+                    <div id="comments">
+                        <div class="comment">
+                            <div class="tagline">[–] ConspiracyBuff Mar 2008</div>
+                            <div class="md">Seriously, the gang boom post-millennium isn't random. It's orchestrated.
+                                Aliens want chaos, they use local thugs as pawns, and Chicago suffers as punishment. The
+                                Union Theatre fire is part of this unfinished business.</div>
+                            <div style="color: #888; font-size: 11px; margin: 5px 0; font-style: italic;">说真的，千禧年后的帮派兴起不是随机的，是有组织的。外星人想要混乱，他们利用当地暴徒作为棋子，芝加哥因此受到惩罚。联合剧院火灾就是这些未竟之事的一部分。</div>
+                        </div>
+                        <div class="comment">
+                            <div class="tagline">[–] SkepticWindy Apr 2008</div>
+                            <div class="md">Come on, that's ridiculous. Most people see it as nonsense. Focus on
+                                reality, not sci-fi conspiracies.</div>
+                            <div style="color: #888; font-size: 11px; margin: 5px 0; font-style: italic;">拜托，这太荒谬了。大多数人都认为这是胡说八道。专注于现实，而不是科幻阴谋论。</div>
+                        </div>
+                        <div class="comment">
+                            <div class="tagline">[–] ConcernedCitizen May 2008</div>
+                            <div class="md">Still, gang conflicts are intense. The economy's terrible, lots of people
+                                can't find jobs or feed themselves. Some minor gangs are causing trouble, some even act
+                                strangely after crackdowns. Makes you nostalgic for when big powers kept order.</div>
+                            <div style="color: #888; font-size: 11px; margin: 5px 0; font-style: italic;">不过，帮派冲突确实很激烈。经济状况糟糕，很多人找不到工作或无法养活自己。一些小帮派在制造麻烦，有些甚至在被打击后行为怪异。这让人怀念大势力维持秩序的时候。</div>
+                        </div>
+                        <div class="comment">
+                            <div class="tagline">[–] OldTimerChicago Jan 2009</div>
+                            <div class="md">Back when big syndicates ran things, at least the streets felt more stable.
+                                Now there's chaos, small-time thugs roaming around, and some are acting paranoid after
+                                being hit hard.</div>
+                            <div style="color: #888; font-size: 11px; margin: 5px 0; font-style: italic;">当大型犯罪集团掌控一切的时候，至少街道感觉更稳定。现在到处都是混乱，小混混四处游荡，有些在遭受重创后表现得很偏执。</div>
+                        </div>
+                        <div class="comment">
+                            <div class="tagline">[–] Realist2009 Oct 2009</div>
+                            <div class="md">Aliens? Really? The real issue is poverty, corruption, and desperation, not
+                                sci-fi plots.</div>
+                            <div style="color: #888; font-size: 11px; margin: 5px 0; font-style: italic;">外星人？真的吗？真正的问题是贫困、腐败和绝望，而不是科幻情节。</div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+        <!-- Sidebar -->
+        <div id="sidebar">
+            <div class="sidebox">
+                <h3>search</h3>
+                <div class="inner"><input type="text" id="search" placeholder="Search Reddit"></div>
+            </div>
+            <div class="sidebox">
+                <h3>news</h3>
+                <div class="inner">
+                    <p><strong>Chicago Prepares for Winter Snowstorm</strong><br>
+                        The city's meteorological department warns of heavy snow expected over the weekend. Residents
+                        are advised to stock up on supplies.</p>
+                    <p style="color: #888; font-size: 11px; margin: 5px 0; font-style: italic;">芝加哥为冬季暴雪做准备：市气象部门警告周末将有大雪。建议居民储备物资。</p>
+
+                    <p><strong>Obama Signs Health Care Bill</strong><br>
+                        President Obama officially signs the landmark health care reform into law, promising expanded
+                        coverage for millions of Americans.</p>
+                    <p style="color: #888; font-size: 11px; margin: 5px 0; font-style: italic;">奥巴马签署医疗保健法案：奥巴马总统正式签署具有里程碑意义的医疗保健改革法案，承诺为数百万美国人扩大保险覆盖范围。</p>
+
+                    <p><strong>Chicago Union Theatre Fire Investigation</strong><br>
+                        Authorities continue to investigate the recent fire at the historic Union Theatre. Cause remains
+                        undetermined.</p>
+                    <p style="color: #888; font-size: 11px; margin: 5px 0; font-style: italic;">芝加哥联合剧院火灾调查：当局继续调查历史悠久的联合剧院最近发生的火灾。起因仍未确定。</p>
+
+                    <p><strong>Stock Market Volatility</strong><br>
+                        Wall Street experiences fluctuations as investors react to economic recovery signals and holiday
+                        season trends.</p>
+                    <p style="color: #888; font-size: 11px; margin: 5px 0; font-style: italic;">股市波动：华尔街经历波动，投资者对经济复苏信号和假日季节趋势做出反应。</p>
+
+                    <p><strong>Local Holiday Charity Drives</strong><br>
+                        Numerous community organizations in Chicago run holiday charity drives to help families affected
+                        by the economic downturn.</p>
+                    <p style="color: #888; font-size: 11px; margin: 5px 0; font-style: italic;">当地假日慈善活动：芝加哥众多社区组织举办假日慈善活动，帮助受经济衰退影响的家庭。</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="clear"></div>
+    </div>
+
+    <!-- Footer -->
+    <div id="footer">
+        <div class="wrap">
+            <div style="margin-top:10px; color:#aaa;">Use of this site constitutes acceptance of our <a href="#">User
+                    Agreement</a> and <a href="#">Privacy Policy</a>. © 2009 Reddit demo.</div>
+        </div>
+    </div>
+</body>
+
+</html>

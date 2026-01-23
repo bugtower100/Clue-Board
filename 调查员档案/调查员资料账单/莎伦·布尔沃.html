@@ -1,0 +1,714 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>员工资料汇总/莎伦·布尔沃 - Bug Tower</title>
+
+    <!-- OverlayScrollbars CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/overlayscrollbars@2.4.6/styles/overlayscrollbars.min.css">
+
+    <!-- OverlayScrollbars JS -->
+    <script
+        src="https://cdn.jsdelivr.net/npm/overlayscrollbars@2.4.6/browser/overlayscrollbars.browser.es6.min.js"></script>
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: linear-gradient(135deg, #0a0a0a 0%, #1a1a0a 50%, #2a2a0a 100%);
+            color: #f5f5dc;
+            font-family: 'Microsoft YaHei', 'PingFang SC', sans-serif;
+            min-height: 100vh;
+            overflow-x: hidden;
+            padding: 30px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        /* 页面标题 */
+        .page-header {
+            background: rgba(255, 215, 0, 0.05);
+            backdrop-filter: blur(10px);
+            padding: 30px 40px;
+            border-radius: 16px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            margin-bottom: 40px;
+            border: 1px solid rgba(255, 215, 0, 0.1);
+            text-align: center;
+        }
+
+        .page-header h1 {
+            font-size: 36px;
+            font-weight: 700;
+            background: linear-gradient(45deg, #ffd700, #ffd700);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 12px;
+            text-shadow: 0 0 30px rgba(255, 215, 0, 0.3);
+        }
+
+        .page-header p {
+            color: #daa520;
+            font-size: 18px;
+            font-style: italic;
+            opacity: 0.8;
+        }
+
+        /* 员工资料卡片 */
+        .employee-card {
+            background: rgba(255, 215, 0, 0.05);
+            backdrop-filter: blur(10px);
+            border-radius: 16px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 215, 0, 0.1);
+            padding: 40px;
+            margin-bottom: 30px;
+        }
+
+        /* 基本信息区域 */
+        .basic-info {
+            display: grid;
+            grid-template-columns: 300px 1fr;
+            gap: 40px;
+            margin-bottom: 40px;
+            padding-bottom: 30px;
+            border-bottom: 1px solid rgba(255, 215, 0, 0.2);
+        }
+
+        .photo-section {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .employee-photo {
+            width: 200px;
+            height: 250px;
+            background: rgba(255, 215, 0, 0.1);
+            border: 2px solid rgba(255, 215, 0, 0.3);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #daa520;
+            font-size: 16px;
+            margin-bottom: 20px;
+            font-style: italic;
+            overflow: hidden;
+        }
+
+        .employee-photo img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 10px;
+        }
+
+        .photo-placeholder {
+            color: #daa520;
+            font-size: 16px;
+            font-style: italic;
+        }
+
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+        }
+
+        .info-item {
+            background: rgba(255, 215, 0, 0.03);
+            padding: 15px 20px;
+            border-radius: 8px;
+            border-left: 3px solid #daa520;
+        }
+
+        .info-label {
+            color: #daa520;
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+
+        .info-value {
+            color: #f5f5dc;
+            font-size: 16px;
+            font-weight: 500;
+        }
+
+        /* 形象描述 */
+        .description-section {
+            margin-bottom: 40px;
+            padding-bottom: 30px;
+            border-bottom: 1px solid rgba(255, 215, 0, 0.2);
+        }
+
+        .section-title {
+            color: #daa520;
+            font-size: 24px;
+            font-weight: 700;
+            margin-bottom: 20px;
+            text-align: center;
+            text-shadow: 0 0 10px rgba(255, 215, 0, 0.3);
+        }
+
+        .description-content {
+            background: rgba(255, 215, 0, 0.03);
+            padding: 25px;
+            border-radius: 12px;
+            border: 1px solid rgba(255, 215, 0, 0.1);
+            line-height: 1.8;
+            font-size: 16px;
+            color: #f5f5dc;
+        }
+
+        /* 属性值表格 */
+        .skills-section {
+            margin-bottom: 40px;
+            padding-bottom: 30px;
+            border-bottom: 1px solid rgba(255, 215, 0, 0.2);
+        }
+
+        .attributes-table {
+            width: 100%;
+            background: rgba(255, 215, 0, 0.03);
+            border-radius: 12px;
+            border: 1px solid rgba(255, 215, 0, 0.1);
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+
+        .attributes-table td {
+            padding: 12px 20px;
+            border-bottom: 1px solid rgba(255, 215, 0, 0.1);
+        }
+
+        .attributes-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .attr-name {
+            color: #f5f5dc;
+            font-weight: 500;
+            width: 25%;
+        }
+
+        .attr-value {
+            color: #daa520;
+            font-weight: 600;
+            text-align: center;
+            width: 15%;
+        }
+
+        .attr-spacer {
+            width: 10%;
+        }
+
+        /* 技能值表格 */
+        .skills-table {
+            width: 100%;
+            background: rgba(255, 215, 0, 0.03);
+            border-radius: 12px;
+            border: 1px solid rgba(255, 215, 0, 0.1);
+            border-collapse: collapse;
+        }
+
+        .skills-table th {
+            background: rgba(255, 215, 0, 0.1);
+            padding: 15px;
+            text-align: center;
+            color: #daa520;
+            font-weight: 700;
+            border-bottom: 1px solid rgba(255, 215, 0, 0.2);
+        }
+
+        .skills-table td {
+            padding: 12px 15px;
+            border-bottom: 1px solid rgba(255, 215, 0, 0.1);
+            color: #f5f5dc;
+        }
+
+        .skills-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .skill-value {
+            color: #daa520;
+            font-weight: 600;
+            text-align: center;
+        }
+
+        /* 背景故事 */
+        .background-section {
+            margin-bottom: 40px;
+            padding-bottom: 30px;
+            border-bottom: 1px solid rgba(255, 215, 0, 0.2);
+        }
+
+        .background-content {
+            background: rgba(255, 215, 0, 0.03);
+            padding: 25px;
+            border-radius: 12px;
+            border: 1px solid rgba(255, 215, 0, 0.1);
+            line-height: 1.8;
+            font-size: 16px;
+            color: #f5f5dc;
+        }
+
+        /* 领导简评 */
+        .evaluation-section {
+            margin-bottom: 40px;
+            padding-bottom: 30px;
+            border-bottom: 1px solid rgba(255, 215, 0, 0.2);
+        }
+
+        .evaluation-content {
+            background: rgba(255, 215, 0, 0.03);
+            padding: 25px;
+            border-radius: 12px;
+            border: 1px solid rgba(255, 215, 0, 0.1);
+            line-height: 1.8;
+            font-size: 16px;
+            color: #f5f5dc;
+            font-style: italic;
+            position: relative;
+        }
+
+        .evaluation-signature {
+            text-align: right;
+            margin-top: 20px;
+            color: #daa520;
+            font-weight: 600;
+        }
+
+        /* 保险相关 */
+        .insurance-section {
+            margin-bottom: 40px;
+        }
+
+        .insurance-table {
+            width: 100%;
+            background: rgba(255, 215, 0, 0.03);
+            border-radius: 12px;
+            overflow: hidden;
+            border: 1px solid rgba(255, 215, 0, 0.1);
+            border-collapse: collapse;
+        }
+
+        .insurance-table th {
+            background: rgba(255, 215, 0, 0.1);
+            padding: 15px;
+            text-align: center;
+            color: #daa520;
+            font-weight: 700;
+            border-bottom: 1px solid rgba(255, 215, 0, 0.2);
+        }
+
+        .insurance-table td {
+            padding: 12px 15px;
+            border-bottom: 1px solid rgba(255, 215, 0, 0.1);
+            color: #f5f5dc;
+        }
+
+        .insurance-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .amount {
+            color: #daa520;
+            font-weight: 600;
+            text-align: right;
+        }
+
+        /* 页面底部 */
+        .page-footer {
+            margin-top: 60px;
+            text-align: center;
+            color: #daa520;
+            font-size: 14px;
+            opacity: 0.6;
+        }
+
+        /* 响应式设计 */
+        @media (max-width: 768px) {
+            body {
+                padding: 15px;
+            }
+
+            .basic-info {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+
+            .info-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .page-header h1 {
+                font-size: 28px;
+            }
+
+            .section-title {
+                font-size: 20px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <!-- 页面标题 -->
+        <div class="page-header">
+            <h1>员工资料汇总</h1>
+            <p>莎伦·布尔沃 - 调查员档案</p>
+        </div>
+
+        <!-- 员工资料卡片 -->
+        <div class="employee-card">
+            <!-- 基本信息 -->
+            <div class="basic-info">
+                <div class="photo-section">
+                    <div class="employee-photo">
+                        <img src="莎伦.png" alt="莎伦·布尔沃" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+                        <div class="photo-placeholder" style="display: none;">
+                            员工照片
+                        </div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">员工编号</div>
+                        <div class="info-value">RMCA0100704</div>
+                    </div>
+                </div>
+
+                <div class="info-grid">
+                    <div class="info-item">
+                        <div class="info-label">姓名</div>
+                        <div class="info-value">莎伦·布尔沃</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">Player</div>
+                        <div class="info-value">莎伦</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">职业</div>
+                        <div class="info-value">阿卡姆警察/调查员</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">诞生年份</div>
+                        <div class="info-value">1976</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">诞生日期</div>
+                        <div class="info-value">06/17</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">出生地</div>
+                        <div class="info-value">美国阿卡姆</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">现居地</div>
+                        <div class="info-value">美国阿卡姆</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">HP</div>
+                        <div class="info-value">13</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">MP</div>
+                        <div class="info-value">11</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">SAN</div>
+                        <div class="info-value">54</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 形象描述 -->
+            <div class="description-section">
+                <h2 class="section-title">形象描述</h2>
+                <div class="description-content">
+                    紫色短发金色眼睛的身形高大（约180cm）的女性，在长长的刘海之下有一道从额头一路到侧脸的可怖的疤痕。平日里打着时尚的耳钉带着choker，穿着靓丽时尚。
+                </div>
+            </div>
+
+            <!-- 属性值 -->
+            <div class="skills-section">
+                <h2 class="section-title">属性值</h2>
+                <table class="attributes-table">
+                    <tbody>
+                        <tr>
+                            <td class="attr-name">力量STR</td>
+                            <td class="attr-value">50</td>
+                            <td class="attr-spacer"></td>
+                            <td class="attr-name">敏捷DEX</td>
+                            <td class="attr-value">75</td>
+                        </tr>
+                        <tr>
+                            <td class="attr-name">体质CON</td>
+                            <td class="attr-value">60</td>
+                            <td class="attr-spacer"></td>
+                            <td class="attr-name">体型SIZ</td>
+                            <td class="attr-value">75</td>
+                        </tr>
+                        <tr>
+                            <td class="attr-name">外貌APP</td>
+                            <td class="attr-value">40</td>
+                            <td class="attr-spacer"></td>
+                            <td class="attr-name">智力/灵感</td>
+                            <td class="attr-value">65</td>
+                        </tr>
+                        <tr>
+                            <td class="attr-name">意志POW</td>
+                            <td class="attr-value">55</td>
+                            <td class="attr-spacer"></td>
+                            <td class="attr-name">教育EDU</td>
+                            <td class="attr-value">80</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- 技能值 -->
+            <div class="skills-section">
+                <h2 class="section-title">技能值</h2>
+                <table class="skills-table">
+                    <thead>
+                        <tr>
+                            <th>技能名称</th>
+                            <th>数值</th>
+                            <th>技能名称</th>
+                            <th>数值</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>乔装</td>
+                            <td class="skill-value">50</td>
+                            <td>侦查</td>
+                            <td class="skill-value">75</td>
+                        </tr>
+                        <tr>
+                            <td>信用评级</td>
+                            <td class="skill-value">30</td>
+                            <td>希望</td>
+                            <td class="skill-value">1</td>
+                        </tr>
+                        <tr>
+                            <td>幸运</td>
+                            <td class="skill-value">60</td>
+                            <td>心理学</td>
+                            <td class="skill-value">32</td>
+                        </tr>
+                        <tr>
+                            <td>急救</td>
+                            <td class="skill-value">60</td>
+                            <td>手枪</td>
+                            <td class="skill-value">82</td>
+                        </tr>
+                        <tr>
+                            <td>攀爬</td>
+                            <td class="skill-value">30</td>
+                            <td>斗殴</td>
+                            <td class="skill-value">75</td>
+                        </tr>
+                        <tr>
+                            <td>汽车驾驶</td>
+                            <td class="skill-value">35</td>
+                            <td>法律</td>
+                            <td class="skill-value">30</td>
+                        </tr>
+                        <tr>
+                            <td>潜行</td>
+                            <td class="skill-value">75</td>
+                            <td>聆听</td>
+                            <td class="skill-value">55</td>
+                        </tr>
+                        <tr>
+                            <td>计算机使用</td>
+                            <td class="skill-value">60</td>
+                            <td>说服</td>
+                            <td class="skill-value">70</td>
+                        </tr>
+                        <tr>
+                            <td>闪避</td>
+                            <td class="skill-value">60</td>
+                            <td></td>
+                            <td class="skill-value"></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- 背景故事 -->
+            <div class="background-section">
+                <h2 class="section-title">背景故事</h2>
+                <div class="background-content">
+                    莎伦出身于马萨诸塞州的阿卡姆小镇（在她出生的时候这里还是小镇）。继承了父母优良基因的她从小就比别人高半个头，这让她在孩子中格外受欢迎，几乎成了孩子王。不过她的性格却又有些爱捉弄人，在小时候常把自己邻居家的小孩欺负的直嚷嚷。<br><br>
+                    
+                    稍微长大后，她的性格稍微沉静下来了一点。受到家里的鼓励，也因为阿卡姆本身的治安问题，她决定成为一名阿卡姆本地警察。在警校取得学习的时候，她在某次事件调查的时候认识了罗斯，随后主动表达了想要加入调查员组织的想法。不过对方表示等莎伦毕业之后再说。<br><br>
+                    
+                    在工作的时间里，因为阿卡姆警力不足，因此工作一直非常繁忙。即使现在已经成为了刑侦部门一把手，但还是经常自己出任务。伤疤是在刚刚入职没多久的某次案件中，为了保护人质，被惊慌失措的犯人一刀砍下的。即使留下了难以磨灭的伤痕，莎伦仍然过的非常自在。
+                </div>
+            </div>
+
+            <!-- 领导简评 -->
+            <div class="evaluation-section">
+                <div class="evaluation-content">
+                    我认识莎伦已经很久了，她是一个好调查员，也是一个好警察。虽然偶尔会做出一些冲动的行为，但是是一个非常善良的人。<br><br>
+                    
+                    即便不常进行调查员工作，她也经常抽时间帮助大家做各种善后处理，是一个非常贴心而且努力的成员。不过如果在遇到事情的时候不要那么容易着急就更好了。<br><br>
+                    
+                    希望往后也能继续扶持公司，实现自己的人生理想。
+                    <div class="evaluation-signature">
+                        —— 贝蒂·罗斯
+                    </div>
+                </div>
+            </div>
+
+            <!-- 保险支出情况 -->
+            <div class="insurance-section">
+                <h2 class="section-title">保险支出情况</h2>
+                <table class="insurance-table">
+                    <thead>
+                        <tr>
+                            <th>保险类型</th>
+                            <th>月缴费额</th>
+                            <th>年缴费额</th>
+                            <th>保障范围</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>基本医疗保险</td>
+                            <td class="amount">$350</td>
+                            <td class="amount">$4,200</td>
+                            <td>常规医疗、住院、门诊</td>
+                        </tr>
+                        <tr>
+                            <td>补充医疗保险</td>
+                            <td class="amount">$120</td>
+                            <td class="amount">$1,440</td>
+                            <td>高端医疗服务、专科医生、额外药物报销</td>
+                        </tr>
+                        <tr>
+                            <td>意外伤害保险</td>
+                            <td class="amount">$100</td>
+                            <td class="amount">$1,200</td>
+                            <td>工作及生活中的突发事故、残疾补偿</td>
+                        </tr>
+                        <tr>
+                            <td>职业责任保险</td>
+                            <td class="amount">$250</td>
+                            <td class="amount">$3,000</td>
+                            <td>因执勤造成的法律诉讼、第三方损害</td>
+                        </tr>
+                        <tr>
+                            <td>人寿保险</td>
+                            <td class="amount">$180</td>
+                            <td class="amount">$2,160</td>
+                            <td>高风险任务期间死亡/失能抚恤金</td>
+                        </tr>
+                        <tr>
+                            <td>特殊任务保险</td>
+                            <td class="amount">$600</td>
+                            <td class="amount">$7,200</td>
+                            <td>涉及枪械、暴力冲突、海外/高危任务的额外保障</td>
+                        </tr>
+                        <tr style="background: rgba(255, 215, 0, 0.1);">
+                            <td><strong>总计</strong></td>
+                            <td class="amount"><strong>$1,600</strong></td>
+                            <td class="amount"><strong>$19,200</strong></td>
+                            <td><strong>针对高风险行动的全面保障</strong></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- 保险使用情况 -->
+            <div class="insurance-section">
+                <h2 class="section-title">保险使用情况</h2>
+                <table class="insurance-table">
+                    <thead>
+                        <tr>
+                            <th>使用时间</th>
+                            <th>保险类型</th>
+                            <th>事件描述</th>
+                            <th>使用金额</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>2003年4月19日</td>
+                            <td>意外伤害保险</td>
+                            <td>擦伤与轻度扭伤，门诊处理</td>
+                            <td class="amount">$900</td>
+                        </tr>
+                        <tr>
+                            <td>2004年9月7日</td>
+                            <td>基本医疗保险</td>
+                            <td>遭遇坠物砸伤肩部，短期住院</td>
+                            <td class="amount">$4,200</td>
+                        </tr>
+                        <tr>
+                            <td>2005年6月22日</td>
+                            <td>基本医疗保险</td>
+                            <td>任务中遭遇冲突受刀伤，缝合与观察治疗</td>
+                            <td class="amount">$4,000</td>
+                        </tr>
+                        <tr>
+                            <td>2006年10月3日</td>
+                            <td>特殊任务保险</td>
+                            <td>中风险任务附加赔付（短期卧床与恢复）</td>
+                            <td class="amount">$2,700</td>
+                        </tr>
+                        <tr>
+                            <td>2008年1月5日</td>
+                            <td>基本医疗保险</td>
+                            <td>扭伤与轻度冻伤</td>
+                            <td class="amount">$2,000</td>
+                        </tr>
+                        <tr>
+                            <td>2010年1月5日</td>
+                            <td>基本医疗保险</td>
+                            <td>贯穿伤，伴随轻伤，住院数周</td>
+                            <td class="amount">$15,000</td>
+                        </tr>
+                        <tr>
+                            <td>2010年1月5日</td>
+                            <td>特殊任务保险</td>
+                            <td>高危任务补偿（附加津贴）</td>
+                            <td class="amount">$3,500</td>
+                        </tr>
+                        <tr style="background: rgba(255, 215, 0, 0.1);">
+                            <td><strong>总计使用</strong></td>
+                            <td><strong>-</strong></td>
+                            <td><strong>-</strong></td>
+                            <td class="amount"><strong>$32,300</strong></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- 页面底部 -->
+        <div class="page-footer">
+        </div>
+    </div>
+
+    <script>
+
+    </script>
+</body>
+
+</html>

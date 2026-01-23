@@ -1,0 +1,1478 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>调查员档案库 - Bug Tower</title>
+
+    <!-- OverlayScrollbars CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/overlayscrollbars@2.4.6/styles/overlayscrollbars.min.css">
+
+    <!-- OverlayScrollbars JS -->
+    <script
+        src="https://cdn.jsdelivr.net/npm/overlayscrollbars@2.4.6/browser/overlayscrollbars.browser.es6.min.js"></script>
+
+    <!-- Sticky.js for fixed elements -->
+    <script src="https://cdn.jsdelivr.net/npm/sticky-js@1.3.0/dist/sticky.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: linear-gradient(135deg, #0a0a0a 0%, #1a1a0a 50%, #2a2a0a 100%);
+            color: #f5f5dc;
+            font-family: 'Microsoft YaHei', 'PingFang SC', sans-serif;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        .container {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* 左侧导航栏 */
+        .sidebar {
+            width: 280px;
+            background: rgba(255, 215, 0, 0.05);
+            backdrop-filter: blur(10px);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            padding: 30px 20px;
+            display: flex;
+            flex-direction: column;
+            border-right: 1px solid rgba(255, 215, 0, 0.1);
+        }
+
+        .logo {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .logo h1 {
+            font-size: 24px;
+            font-weight: 700;
+            background: linear-gradient(45deg, #ffd700, #ffd700);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 8px;
+            text-shadow: 0 0 30px rgba(255, 215, 0, 0.3);
+        }
+
+        .logo p {
+            color: #daa520;
+            font-size: 14px;
+            font-style: italic;
+            opacity: 0.8;
+        }
+
+        .nav-menu {
+            list-style: none;
+        }
+
+        .nav-item {
+            margin-bottom: 8px;
+        }
+
+        .nav-link {
+            display: flex;
+            align-items: center;
+            padding: 15px 20px;
+            text-decoration: none;
+            color: #f5f5dc;
+            border-radius: 12px;
+            transition: all 0.3s ease;
+            font-weight: 500;
+        }
+
+        .nav-link:hover {
+            background: rgba(255, 215, 0, 0.1);
+            color: #ffd700;
+            transform: translateX(5px);
+            border: 1px solid rgba(255, 215, 0, 0.2);
+        }
+
+        .nav-link.active {
+            background: rgba(255, 215, 0, 0.15);
+            color: #ffd700;
+            box-shadow: 0 4px 15px rgba(255, 215, 0, 0.2);
+            border: 1px solid rgba(255, 215, 0, 0.3);
+        }
+
+        .nav-icon {
+            margin-right: 12px;
+            font-size: 18px;
+        }
+
+        /* 主内容区 */
+        .main-content {
+            flex: 1;
+            padding: 30px;
+            overflow-y: auto;
+        }
+
+        /* 主页面内容区底部padding */
+        .container .main-content {
+            padding-bottom: 80px;
+        }
+
+        .content-header {
+            background: rgba(255, 215, 0, 0.05);
+            backdrop-filter: blur(10px);
+            padding: 25px 30px;
+            border-radius: 16px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            margin-bottom: 30px;
+            border: 1px solid rgba(255, 215, 0, 0.1);
+        }
+
+        .content-header h2 {
+            font-size: 28px;
+            font-weight: 700;
+            background: linear-gradient(45deg, #ffd700, #ffd700);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 8px;
+            text-shadow: 0 0 30px rgba(255, 215, 0, 0.3);
+        }
+
+        .content-header p {
+            color: #daa520;
+            font-size: 16px;
+            font-style: italic;
+            opacity: 0.8;
+        }
+
+        /* 导航栏引言 */
+        .nav-quote {
+            background: rgba(255, 215, 0, 0.08);
+            border: 1px solid rgba(255, 215, 0, 0.2);
+            border-radius: 12px;
+            padding: 20px;
+            margin: 20px 0;
+            backdrop-filter: blur(10px);
+        }
+
+        .nav-quote p {
+            color: #daa520;
+            font-size: 14px;
+            font-style: italic;
+            line-height: 1.6;
+            margin: 0;
+            text-align: center;
+            opacity: 0.9;
+            text-shadow: 0 0 10px rgba(255, 215, 0, 0.2);
+        }
+
+        /* 页面底部 */
+        .page-footer {
+            position: fixed;
+            bottom: 0;
+            left: 280px;
+            right: 0;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(10px);
+            border-top: 1px solid rgba(255, 215, 0, 0.3);
+            z-index: 1;
+            padding: 0;
+        }
+
+        /* 氛围引言 */
+        .atmosphere-quote {
+            background: transparent;
+            border: none;
+            border-radius: 0;
+            padding: 16px 24px;
+            margin: 0;
+            text-align: center;
+        }
+
+        .atmosphere-quote p {
+            color: #daa520;
+            font-size: 13px;
+            font-style: italic;
+            line-height: 1.6;
+            margin: 0;
+            opacity: 0.8;
+            text-shadow: 0 0 10px rgba(218, 165, 32, 0.4);
+            letter-spacing: 0.3px;
+        }
+
+        /* 安全提示 */
+        .security-notice {
+            background: rgba(255, 193, 7, 0.1);
+            border-left: 4px solid #ffc107;
+            padding: 8px 20px;
+            margin-top: auto;
+            font-size: 12px;
+            color: #daa520;
+            text-align: center;
+            border-radius: 0 8px 8px 0;
+        }
+
+        /* 响应式设计 */
+        @media (max-width: 768px) {
+            .container {
+                flex-direction: column;
+            }
+
+            .sidebar {
+                width: 100%;
+                padding: 20px;
+            }
+
+            .main-content {
+                padding: 20px;
+            }
+        }
+
+        /* 隐藏的内容区域 */
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .categories {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+            margin-bottom: 50px;
+        }
+
+        .category-card {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            padding: 30px;
+            backdrop-filter: blur(10px);
+            transition: all 0.3s ease;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .category-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 215, 0, 0.1), transparent);
+            transition: left 0.5s ease;
+        }
+
+        .category-card:hover::before {
+            left: 100%;
+        }
+
+        .category-card:hover {
+            transform: translateY(-10px);
+            border-color: rgba(255, 215, 0, 0.3);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+        }
+
+        .category-title {
+            font-size: 1.5rem;
+            margin-bottom: 15px;
+            color: #ffd700;
+        }
+
+        .category-description {
+            color: #f5f5dc;
+            line-height: 1.6;
+            margin-bottom: 20px;
+        }
+
+        .investigator-count {
+            font-size: 0.9rem;
+            color: #b8860b;
+            text-align: right;
+        }
+
+        .investigators-grid {
+            display: none;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 20px;
+            margin-top: 30px;
+        }
+
+        .investigators-grid.active {
+            display: grid;
+        }
+
+        .investigator-card {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 10px;
+            padding: 20px;
+            text-align: center;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .investigator-card:hover {
+            transform: scale(1.05);
+            border-color: rgba(255, 215, 0, 0.2);
+            background: rgba(255, 255, 255, 0.08);
+        }
+
+        .investigator-avatar {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: linear-gradient(45deg, #ffd700, #daa520);
+            margin: 0 auto 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            color: #000;
+            font-weight: bold;
+            line-height: 1;
+            text-align: center;
+            font-family: "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", sans-serif;
+            position: relative;
+        }
+
+        .investigator-avatar>* {
+            transform: translateY(-1px);
+        }
+
+        .investigator-icon-image {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            object-fit: cover;
+            transform: none !important;
+        }
+
+        .investigator-icon-fallback {
+            font-size: 2rem;
+            color: #000;
+            font-weight: bold;
+        }
+
+        .investigator-name {
+            font-size: 1.1rem;
+            margin-bottom: 8px;
+            color: #f5f5dc;
+        }
+
+        .investigator-role {
+            font-size: 0.9rem;
+            color: #b8860b;
+            margin-bottom: 10px;
+        }
+
+        .investigator-status {
+            font-size: 0.8rem;
+            padding: 4px 8px;
+            border-radius: 12px;
+            background: rgba(76, 175, 80, 0.2);
+            color: #4caf50;
+            display: inline-block;
+        }
+
+
+
+        .floating-particles {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: -1;
+        }
+
+        .particle {
+            position: absolute;
+            width: 2px;
+            height: 2px;
+            background: rgba(255, 215, 0, 0.3);
+            border-radius: 50%;
+            animation: float 6s infinite linear;
+        }
+
+        @keyframes float {
+            0% {
+                transform: translateY(100vh) rotate(0deg);
+                opacity: 0;
+            }
+
+            10% {
+                opacity: 1;
+            }
+
+            90% {
+                opacity: 1;
+            }
+
+            100% {
+                transform: translateY(-100px) rotate(360deg);
+                opacity: 0;
+            }
+        }
+
+        /* 分类标题样式 */
+        .category-header {
+            margin-bottom: 30px;
+            padding: 20px;
+            background: linear-gradient(135deg, rgba(255, 215, 0, 0.1), rgba(255, 215, 0, 0.05));
+            border-radius: 10px;
+            border: 1px solid rgba(255, 215, 0, 0.2);
+        }
+
+        .category-title {
+            color: #ffd700;
+            font-size: 1.8em;
+            margin: 0 0 10px 0;
+            font-weight: bold;
+        }
+
+        .category-description {
+            color: #b8860b;
+            font-size: 1em;
+            margin: 0;
+            line-height: 1.5;
+        }
+
+        /* 文件链接计数 */
+        .file-links-count {
+            color: #b8860b;
+            font-size: 0.9em;
+            padding: 5px 10px;
+            background: rgba(255, 215, 0, 0.1);
+            border-radius: 15px;
+            border: 1px solid rgba(255, 215, 0, 0.2);
+        }
+
+        /* 文件链接容器 */
+        .file-links-container {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .file-link-item {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 215, 0, 0.2);
+            border-radius: 8px;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .file-link-item:hover {
+            background: rgba(255, 215, 0, 0.1);
+            border-color: rgba(255, 215, 0, 0.4);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(255, 215, 0, 0.2);
+        }
+
+        .file-link {
+            display: block;
+            padding: 15px;
+            color: #ffd700;
+            text-decoration: none;
+            transition: all 0.3s ease;
+        }
+
+        .file-link:hover {
+            color: #fff;
+        }
+
+        .link-icon {
+            display: inline-block;
+            margin-right: 10px;
+            font-size: 1.1em;
+        }
+
+        .link-title {
+            font-weight: bold;
+            font-size: 1.1em;
+            display: block;
+            margin-bottom: 5px;
+        }
+
+        .link-url {
+            font-size: 0.85em;
+            color: #b8860b;
+            font-family: 'Courier New', monospace;
+            word-break: break-all;
+            opacity: 0.8;
+        }
+
+        .file-link:hover .link-url {
+            color: #ffd700;
+            opacity: 1;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 1000;
+            backdrop-filter: blur(5px);
+        }
+
+        .modal-content {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(26, 26, 46, 0.95);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            padding: 40px;
+            max-width: 600px;
+            width: 90%;
+            max-height: 80vh;
+        }
+
+        .modal-close {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            z-index: 1001;
+            font-size: 24px;
+            cursor: pointer;
+            color: #888;
+            transition: all 0.3s ease;
+            background: rgba(26, 26, 46, 0.95);
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+        }
+
+        .modal-close:hover {
+            color: #ffd700;
+            border-color: rgba(255, 215, 0, 0.3);
+            background: rgba(255, 215, 0, 0.1);
+        }
+
+        .modal-body-container {
+            max-height: calc(80vh - 100px);
+            overflow-y: auto;
+            padding-right: 10px;
+            padding-top: 60px;
+        }
+
+        .detail-avatar {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            background: linear-gradient(45deg, #ffd700, #daa520);
+            margin: 0 auto 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 3rem;
+            color: #000;
+            font-weight: normal;
+            line-height: 1;
+            text-align: center;
+            font-family: "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", sans-serif;
+            position: relative;
+        }
+
+        .detail-avatar>* {
+            transform: translateY(-2px);
+        }
+
+        .detail-info {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .detail-name {
+            font-size: 2rem;
+            margin-bottom: 10px;
+            color: #ffd700;
+        }
+
+        .detail-section {
+            margin-bottom: 25px;
+        }
+
+        .detail-section h3 {
+            color: #ffd700;
+            margin-bottom: 10px;
+            border-bottom: 1px solid rgba(255, 215, 0, 0.3);
+            padding-bottom: 5px;
+        }
+
+        .detail-section p {
+            line-height: 1.6;
+            color: #f5f5dc;
+        }
+
+        /* OverlayScrollbars 自定义主题 */
+        .os-theme-dark {
+            --os-size: 8px;
+            --os-padding-perpendicular: 2px;
+            --os-padding-axis: 2px;
+            --os-track-border-radius: 4px;
+            --os-track-bg: rgba(255, 255, 255, 0.05);
+            --os-track-bg-hover: rgba(255, 255, 255, 0.1);
+            --os-track-bg-active: rgba(255, 255, 255, 0.15);
+            --os-track-border: transparent;
+            --os-track-border-hover: transparent;
+            --os-track-border-active: transparent;
+            --os-handle-border-radius: 4px;
+            --os-handle-bg: rgba(255, 215, 0, 0.4);
+            --os-handle-bg-hover: rgba(255, 215, 0, 0.6);
+            --os-handle-bg-active: rgba(255, 215, 0, 0.8);
+            --os-handle-border: transparent;
+            --os-handle-border-hover: transparent;
+            --os-handle-border-active: transparent;
+            --os-handle-min-size: 20px;
+            --os-handle-max-size: none;
+            --os-handle-perpendicular-size: 100%;
+            --os-handle-perpendicular-size-hover: 100%;
+            --os-handle-perpendicular-size-active: 100%;
+            --os-scrollbar-auto-hide: none;
+            --os-scrollbar-auto-hide-delay: 1300ms;
+            --os-scrollbar-auto-hide-suspend: false;
+        }
+
+        /* 为body添加滚动条样式 */
+        .os-theme-dark.os-scrollbar-horizontal .os-scrollbar-track {
+            background: rgba(255, 255, 255, 0.02);
+        }
+
+        .os-theme-dark.os-scrollbar-vertical .os-scrollbar-track {
+            background: rgba(255, 255, 255, 0.02);
+        }
+
+        /* 滚动条角落样式 */
+        .os-theme-dark .os-scrollbar-corner {
+            background: rgba(255, 255, 255, 0.02);
+        }
+
+        /* 文件链接项悬停效果 */
+        .file-link-item {
+            transition: all 0.3s ease;
+        }
+
+        .file-link-item:hover {
+            background: rgba(255, 255, 255, 0.08) !important;
+            border-color: rgba(255, 215, 0, 0.3) !important;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        }
+
+        /* 访问按钮悬停效果 */
+        .access-btn:hover {
+            background: linear-gradient(45deg, #ffed4e, #ffd700) !important;
+            transform: scale(1.05);
+            box-shadow: 0 2px 8px rgba(255, 215, 0, 0.4);
+        }
+
+        .access-btn:active {
+            transform: scale(0.98);
+        }
+    </style>
+</head>
+
+<body>
+    <div class="floating-particles"></div>
+
+    <div class="container">
+        <!-- 左侧导航栏 -->
+        <div class="sidebar">
+            <div class="logo">
+                <h1>调查员档案库</h1>
+                <p>Investigator Archives</p>
+            </div>
+
+            <nav>
+                <ul class="nav-menu">
+                    <li class="nav-item">
+                        <a href="#" class="nav-link active" onclick="showFiles('reports')">
+                            <span class="nav-icon">📋</span>
+                            调查报告
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="#" class="nav-link" onclick="showFiles('evidence')">
+                            <span class="nav-icon">📄</span>
+                            相关资料
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="#" class="nav-link" onclick="showFiles('research')">
+                            <span class="nav-icon">👁️</span>
+                            第三类接触
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="#" class="nav-link" onclick="showFiles('classified')">
+                            <span class="nav-icon">💼</span>
+                            调查员档案管理
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="#" class="nav-link" onclick="showFiles('tools')">
+                            <span class="nav-icon">🛠️</span>
+                            调查员工具
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+
+            <div class="security-notice">
+                <p>⚠️ 机密访问警告：未经授权访问将被记录并追踪</p>
+            </div>
+        </div>
+
+        <!-- 主内容区 -->
+        <div class="main-content">
+            <div class="content-header">
+                <h2 id="content-title">调查员档案管理</h2>
+                <p id="content-description">机密档案库，记录着那些深入未知领域的调查员们的足迹与发现。</p>
+            </div>
+
+            <div class="investigators-grid" id="investigators-grid">
+                <!-- 调查员卡片将通过JavaScript动态生成 -->
+            </div>
+        </div>
+    </div>
+
+    <!-- 详情模态框 -->
+    <div class="modal" id="investigator-modal">
+        <div class="modal-content">
+            <div class="modal-close" onclick="closeModal()">&times;</div>
+            <div id="modal-body">
+                <!-- 详情内容将通过JavaScript动态生成 -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // COC调查员档案数据
+        const archiveData = {
+            reports: {
+                title: "调查报告",
+                description: "各类异常事件的详细存档——亲爱的调查员们，你们的ddl完成了吗:)",
+                files: [
+                    {
+                        name: "东方快车系列案",
+                        date: "192x-02-02",
+                        status: "已借阅/机密",
+                        icon: "🚆",
+                        description: "两个无畏的年轻人与一个倒霉的侦探与恐怖的邪教徒途径整个欧洲的漫长对抗之旅。",
+                        links: [
+                            {
+                                title: "·黑夜迷雾中的舞者·<br>·1923，伦敦·",
+                                url: "东方快车/黑夜迷雾中的舞者.pdf",
+                                description: "史密斯教授遇袭身受重伤疑团重重<br>巴蒂伊桑临危受命登上东方快车追寻雕像<br>故事开幕"
+                            },
+                            {
+                                title: "·血色毡帽·<br>·1893，伦敦·",
+                                url: "东方快车/血色毡帽.pdf",
+                                description: "深夜营救学徒遇怪奇<br>史密斯好友踏上旅途追毡帽<br>往事追忆"
+                            },
+                            {
+                                title: "·恶之花·<br>·1923，法国·",
+                                url: "东方快车/恶之花.pdf",
+                                description: "赴巴黎探索拟像信息<br>寻伯爵消息前往医生宅邸<br>调查员地下探索获碎片破诅咒<br>雾气萦绕，险象环生"
+                            },
+                            {
+                                title: "·幻梦境及其他·<br>·1923，幻梦境/洛桑/米兰·",
+                                url: "东方快车/飞跃阿尔卑斯山脉.pdf",
+                                description: "忽入梦界怪奇多<br>虚实悲喜皆为真<br>幕后暗影渐现身<br>遗憾虽留，志趣永存"
+                            },
+                        ]
+                    },
+                    {
+                        name: "邪教偶像团体杀人案",
+                        date: "2007-05-01",
+                        status: "已归档",
+                        icon: "🎤",
+                        description: "负责人：哈尔克·齐亚特<br><br>相关人员：佰雀·凯斯莱特，哈里森·拉米雷斯<br><br>2007年位于博尔顿郊区的梦想剧场（Dream Theater）及相关区域发生的系列超自然关联事件简要调查报告：<br>该事件导致至少两名人员离奇死亡，现场发现与当红偶像团体“SH”相关线索，调查结果显示“SH”与该杀人事件存在高度关联；<br>据深入调查发现，该偶像团体与废弃的布罗蒂圣母修道会相关，在该修道会中，我们搜索到了包括符合邪教仪式特征的符号以及文献记录。<br>调查结果如下：布罗蒂圣母修道会是一个存在于博尔顿和阿卡姆之间有着百年历史的以奈亚拉托提普的化身浮肿之女为偶像的邪教组织。该教会的信徒借由信物获得长久的青春和美貌，但作为交换必须要为邪神献上人类的心智，而到了现在，他们形成了通过偶像活动收割人类心智的运作模式。<br>最终调查人员成功摧毁邪教核心据点梦想剧场，相关涉案人员均已死亡，所有接触者均接受了必要的心理干预与后续观察。目前情况良好。",
+                        links: [
+                            {
+                                title: "主调查报告",
+                                url: "偶像爆破.html",
+                                description: "事件的完整调查记载，来源于——？"
+                            }
+                        ]
+                    },
+                    {
+                        name: "神秘人追杀事件",
+                        date: "2008-06-01",
+                        status: "已归档",
+                        icon: "👻",
+                        description: "负责人：哈里森·拉米雷斯<br><br>相关人员：布莱兹·罗德里格斯，马修·莱昂纳多<br><br>2008年位于阿卡姆教堂区针对哈里森·拉米雷斯的袭击案及其背后的超自然要素简要调查报告：<br>该事件影响范围小，无人伤亡，财物损失若干。 据深入调查可知，袭击者善于爆破，外观非人，其面容与调查员哈里森·拉米雷斯高度相似。据其所言，它是30年后的拉米雷斯，以下称其为“拉米雷斯”。“拉米雷斯”认为未来发生了严重的变故，为了改变未来，必须杀死过去的拉米雷斯。因其精神状态不稳定，无法确认对方言论的真实性。<br>在调查员制服“拉米雷斯”后，从缝隙交界处出现的“寻血猎犬”将其杀死，如今难以确认对方所经历的未来是何模样。从“拉米雷斯”透露的只言片语可得知些许，具体内容已另留档，在此不做描述。<br>事件无牵扯无辜人士，涉案人员已死亡，相关人员已签订保密协议。",
+
+                        links: [
+                            {
+                                title: "完整调查报告",
+                                url: "年少之罪.html",
+                                description: "跨越时空的残骸"
+                            }
+                        ]
+                    },
+                    {
+                        name: "汉堡店集体发疯残杀案",
+                        date: "2008-11-30",
+                        status: "已归档",
+                        icon: "🍔",
+                        description: "负责人：哈里森·拉米雷斯<br><br>相关人员：布莱兹·罗德里格斯<br><br>2008年位于阿卡姆郊区Wyse Fries加盟店的恶性杀人案及其背后的超自然事件简要调查报告：<br><br>该事件导致死亡三人，影响若干。根据互联网调查及相关人员简述，该杀人事件与美食博主布兰特·霍季亚克高度关联；<br>据深入调查可知，霍季亚克崇拜未知力量，曾以“大屁股粉丝”这个账号多次发布神话崇拜。据案发店铺前员工加西亚描述，杀人者及其他精神失常者与霍季亚克有紧密联系，推断霍季亚克以神秘力量控制员工，主导了这起杀人案。<br>后续调查人员追踪至其追求对象凯拉所在分店，已解决主使霍季亚克及其控制的三名人员，且解救凯拉在内六位无辜人士。<br>所有涉案人士已死亡，相关人员已签订保密协议，从主使霍基亚克屋内搜出的相关影片已封存。若要查看，请勿开启声音，并保证身边有至少一人陪同。",
+
+                        links: [
+                            {
+                                title: "完整调查报告",
+                                url: "特供菜单.html",
+                                description: "特供菜单！要来一份吗？"
+                            }
+                        ]
+                    },
+                    {
+                        name: "加拿大雪山风景区恶性屠杀事件",
+                        date: "2009-01-05",
+                        status: "已归档",
+                        icon: "🏔",
+                        description: "负责人：佰雀·凯斯莱特<br><br>相关人员：哈尔克·齐亚特，哈里森·拉米雷斯，平川路人，马修·莱昂纳多<br><br>",
+
+                        links: [
+                            {
+                                title: "完整调查报告",
+                                url: "白色圣诞节.html",
+                                description: "风中呼啸的狂热者的失败与罪恶"
+                            }
+                        ]
+                    },
+                    {
+                        name: "海上游轮残杀事件",
+                        date: "2009-08-12",
+                        status: "已归档",
+                        icon: "🚢",
+                        description: "负责人：佰雀·凯斯莱特<br><br>相关人员：哈里森·拉米雷斯，平川路人，马修·莱昂纳多 <br><br>2009年8月位于远洋诗歌号游轮对资助方戈丹奥秘基金会调查的简要调查报告：<br>经奥古斯都金融公司委托，对戈丹奥秘基金会进行调查。<br>经调查发现，戈丹奥秘基金会与大衮密教存在高度关联，在其资助的远洋诗歌号游轮图书室内发现与大衮相关文献资料数起；在船员休息室内发现数名员工为深潜者伪装；资助方卡尔·费舍尔为大衮密教核心成员之一；游轮餐厅内部为深潜者餐厅，游轮内部发生多起食人事件均是深潜者所为。<br>调查结果如下：戈丹奥秘基金会是大衮密教意图向陆地扩展的分部。大衮密教的信徒以多种利益吸引不同领域的精英人群通过发誓建立血脉链接加入大衮密教，船上部分普通游客则被当作深潜者们的食物。<br>最终调查以主要相关人员卡尔·费舍尔及斯卡莉特·加西亚的死亡使游轮餐厅计划暂时停止，延缓大衮密教向陆地方面寻求合作。后续事件经船员雷欧之手将证件转交给警方，相关涉案人员均己死亡，所有接触者在后续均己接受相关心理评估，目前情况良好。",
+
+                        links: [
+                            {
+                                title: "完整调查报告",
+                                url: "海上餐车.html",
+                                description: "铭刻在深海中的——？背叛者的记录。"
+                            }
+                        ]
+                    },
+                    {
+                        name: "克利夫兰市医学院学生失踪案",
+                        date: "2009-10-13",
+                        status: "已归档",
+                        icon: "💻",
+                        description: "负责人：平川路人<br><br>相关人员：克拉拉·贝克尔<br><br>",
+
+                        links: [
+                            {
+                                title: "完整调查报告",
+                                url: "分离焦虑.html",
+                                description: "在罪恶的血液中不断传承的异常与卑劣"
+                            }
+                        ]
+                    },
+                    {
+                        name: "宾夕法尼亚州公寓卫生调查",
+                        date: "2009-11-24",
+                        status: "已归档/待补充",
+                        icon: "📸",
+                        description: "代理负责人：莎伦·布尔沃<br>相关人员：平川路人，布莱兹·罗德里格斯 <br><br>事件起因是布莱兹·罗德里格斯于十月中旬（推测）接受了西奥多·考德威尔对位于宾夕法尼亚州的巴克利公寓楼进行评审调查，遂找到平川路人让其协助调查。<br>调查发现巴克利公寓楼户主艾德蒙·格雷实则为修格斯领主，豢养威胁租客成为自己的备用食粮。<br>事件最后，艾德蒙·格雷被成功消灭，委托完成，但相关人员平川路人精神遭受重创，现已接收治疗暂且出院正常生活。另一相关人员布莱兹·罗德里格斯行踪不明，有关该事件的消息来自于未知ip发送的事件相关新闻报道。（个人推测疑似为布莱兹发送*待确认）",
+
+                        links: [
+                            {
+                                title: "完整调查报告",
+                                url: "廉租公寓.html",
+                                description: "——家，一个家，一个家，一个家，一个家，一个家，一个一个一一一一一一一一一"
+                            }
+                        ]
+                    },
+                    {
+                        name: "小说家遇刺案",
+                        date: "2009-10-05",
+                        status: "已归档",
+                        icon: "📄",
+                        description: "负责人：佰雀·凯斯莱特<br><br>其他相关人员：哈里森·拉米雷斯<br><br>",
+                        links: [
+                            {
+                                title: "完整记录——一本小说",
+                                url: "暗流.html",
+                                description: "流传于网络之中的，不为人知的记录。——或许我们可以叫他《暗流2》！"
+                            }
+                        ]
+                    },
+                    {
+                        name: "草甸山旅游区冰封杀人事件",
+                        date: "2008-11-15",
+                        status: "已归档",
+                        icon: "🐈",
+                        description: "负责人：哈里森·拉米雷斯<br><br>其他相关人员：张思睿<br><br>",
+
+                        links: [
+                            {
+                                title: "完整调查报告",
+                                url: "人，你惊扰了我.html",
+                                description: "乌撒的猫口述的在地球的见闻之一——就这样被一下弄醒了！"
+                            }
+                        ]
+                    },
+                    {
+                        name: "伊塔斯卡连环杀人事件兼芝加哥图书馆失窃追查事件",
+                        date: "2010-01-08",
+                        status: "已归档",
+                        icon: "🎄",
+                        description: "负责人：佰雀·凯斯莱特<br><br>其他相关人员：哈里森·拉米雷斯<br><br>",
+
+                        links: [
+                            {
+                                title: "完整调查报告",
+                                url: "小心地挂在壁炉旁.html",
+                                description: "壁炉其实是坏文明，但是空调电费太贵了"
+                            }
+                        ]
+                    },
+                ]
+            },
+            evidence: {
+                title: "相关资料",
+                description: "现事件相关资料的数字化存档——有一些过往总是难以忘怀",
+                files: [
+                    {
+                        name: "芝加哥异常事件调查档案",
+                        type: "HTML",
+                        date: "2010-1-26",
+                        status: "机密",
+                        icon: "🏙️",
+                        description: "于芝加哥调查黑帮谋杀案时期搜集的各种相关资料，包括犯罪报告、尸检报告、地震报告等。<br>整理人：海伦·帕内尔",
+                        links: [
+                            {
+                                title: "帮派谋杀案报告",
+                                url: "相关资料/芝加哥/材料1.html",
+                                description: "Bruno Lanzetti谋杀案 - 2009年12月发现的残忍帮派谋杀案，受害者遭到极端肢解。"
+                            },
+                            {
+                                title: "流浪汉死亡事件",
+                                url: "相关资料/芝加哥/材料2.html",
+                                description: "2003年联合剧院附近发现的无名流浪汉尸体，死因疑似野兽撕咬。"
+                            },
+                            {
+                                title: "私家侦探爆炸案",
+                                url: "相关资料/芝加哥/材料4.html",
+                                description: "Jack Sullivan私家侦探办公室爆炸案 - 2009年12月的定向攻击事件。"
+                            },
+                            {
+                                title: "Bruno Lanzetti尸检报告",
+                                url: "相关资料/芝加哥/材料5-尸检报告.html",
+                                description: "详细的法医尸检报告，揭示了受害者遭受的非人道伤害和异常死因。"
+                            },
+                            {
+                                title: "联合剧院关闭报道",
+                                url: "相关资料/芝加哥/材料7-联合剧院新闻/联合剧院新闻.html",
+                                description: "2005年联合剧院的正式关闭报道，这座1891年的历史建筑因地震损坏而永久关闭。"
+                            },
+                            {
+                                title: "联合剧院收购新闻",
+                                url: "相关资料/芝加哥/材料8.html",
+                                description: "2009年Metropolis Investment收购联合剧院的商业报道。"
+                            },
+                            {
+                                title: "芝加哥地震报告",
+                                url: "相关资料/芝加哥/材料9-芝加哥地震/材料9.html",
+                                description: "2005年4月18日罕见的5.8级地震报告，联合剧院区域受损严重，居民报告听到地下异响。"
+                            },
+                            {
+                                title: "商业采购博览会",
+                                url: "相关资料/芝加哥/材料10.html",
+                                description: "2009年芝加哥商贸联盟夏季采购博览会，涉及地震损坏区域的重建项目。"
+                            },
+                            {
+                                title: "网络讨论记录",
+                                url: "相关资料/芝加哥/材料11.html",
+                                description: "2008-2009年Reddit论坛上关于联合剧院火灾和芝加哥阴影的讨论记录，包含阴谋论和目击者证言。"
+                            }
+                        ]
+                    },
+                ]
+            },
+            research: {
+                title: "第三类接触",
+                description: "有关事件接触过的各类神话生物记录——世界上总存在着各种“异常”等待我们发现。我们应该发现吗？",
+                files: [
+                    {
+                        name: "怪物之锤",
+                        type: "pdf",
+                        icon: "📚",
+                        description: "《怪物之锤》中文pdf由奈亚猫猫汉化组翻译制作，如有纰漏请qq联系243507220或邮箱oreoinhell@gmail.com<br>本汉化文件仅供爱好者学习交流使用，请支持正版！<br>混沌元素官网：https://www.chaosium.com<br>TRPG得来速：https://www.drivethrurpg.com ",
+                        links: [
+                            {
+                                title: "怪物之锤第一卷：神话怪物",
+                                url: "/资料/怪物之锤第一卷：神话怪物.pdf",
+                                description: "怪物之锤第一卷：神话怪物",
+                            },
+                            {
+                                title: "怪物之锤第二卷：神话神祇",
+                                url: "/资料/怪物之锤第二卷：神话神祇",
+                                description: "怪物之锤第二卷：神话神祇",
+                            }
+                        ]
+                    },
+                    {
+                        name: "幻梦境入门",
+                        type: "PDF",
+                        icon: "🔬",
+                        description: "幻梦境拓展7版（5版转）&幻梦之书",
+                        links: [
+                            {
+                                title: "幻梦之书",
+                                url: "资料/幻梦境故事集.pdf",
+                                description: "幻梦境（Dreamlands）系列作品是H.P.洛夫克拉夫特作品中一个特殊而又十分重要的部分。和洛夫克拉夫特赖以成名的克苏鲁神话作品不同，幻梦境作品并不恐怖，大多是一些如梦似幻的空想故事或散文，很多作品直接源于他的梦。这一系列作品展现了洛夫克拉夫特心灵的另一个侧面一一个梦想家乃至空想家，并且是他心灵中最精致、美好、愉悦的部分。可以说，不理解幻梦境，就不会理解洛夫克拉夫特。"
+                            },
+                            {
+                                title: "幻梦境拓展（7版）",
+                                url: "资料/幻梦境修订七版.pdf",
+                                description: "洛夫克拉夫特的幻梦境——睡眠之壁之外的角色扮演"
+                            },
+                        ]
+                    },
+                    {
+                        name: "克苏鲁神话魔法大典",
+                        type: "pdf",
+                        icon: "📖",
+                        description: "超过550种法术，后果可怕，秘密骇人，力量深不可测！<br>这里精选了《克苏鲁的呼唤》系列30余年以来各种扩展和模组出现的法术。所有法术都经过修订，适应《克苏鲁的呼唤》第七版游戏；还含有可选的深层魔法，供最强大的神话巫师和怪物使用，用它们来迷惑、阻碍调查员。<br>书中也附有完整的指导建议，如法术名称、施法要素、魔法成分和天文因素。还新增了缺陷魔法、地脉魔法、民俗魔法、幻梦境魔法的机制。本大典可以作为游戏资源、游戏辅助或者设计剧情时的灵感来源。<br>《克苏鲁神话魔法大典》是奥法守秘人的必要扩展。<br>需要《克苏鲁的呼唤规则书》。",
+                        links: [
+                            {
+                                title: "克苏鲁神话魔法大典",
+                                url: "资料/克苏鲁神话魔法大典1.1.pdf",
+                                description: "克苏鲁神话魔法大典1.1"
+                            },
+                        ]
+                    },
+                ]
+            },
+            classified: {
+                title: "调查员档案及相关支出",
+                description: "买全套保险是对的，不过还是希望大家能平安无恙。",
+                files: [
+                    {
+                        name: "哈里森·拉米雷斯",
+                        size: "完整档案",
+                        status: "正式员工",
+                        icon: "📄",
+                        iconImage: "图标/哈里森.png", // 自定义图片路径
+                        url: "调查员资料账单/哈里森·拉米雷斯.html"
+                    },
+                    {
+                        name: "平川路人",
+                        size: "完整档案",
+                        status: "正式员工",
+                        icon: "📄",
+                        iconImage: "图标/路人.png", // 自定义图片路径
+                        url: "调查员资料账单/平川路人.html"
+                    },
+                    {
+                        name: "佰雀·凯斯莱特",
+                        size: "完整档案", 
+                        status: "正式员工",
+                        icon: "📄",
+                        iconImage: "图标/佰雀.png", // 自定义图片路径
+                        url: "调查员资料账单/佰雀·凯斯莱特.html"
+                    },
+                    {
+                        name: "费里斯·威廉姆斯",
+                        size: "完整档案",
+                        status: "临时员工",
+                        icon: "📄",
+                        iconImage: "图标/费里斯.png", // 自定义图片路径
+                        url: "调查员资料账单/费里斯·威廉姆斯.html"
+                    },
+                    {
+                        name: "莎伦·布尔沃",
+                        size: "完整档案",
+                        status: "正式员工",
+                        icon: "📄",
+                        iconImage: "图标/莎伦.png", // 自定义图片路径
+                        url: "调查员资料账单/莎伦·布尔沃.html"
+                    },
+                ]
+            },
+            tools: {
+                title: "调查员工具",
+                description: "工欲善其事，必先利其器。这里提供调查员常用的辅助工具。",
+                files: [
+                    {
+                        name: "年代物价&武器查询",
+                        icon: "💰",
+                        description: "查询不同年代的物价信息，辅助调查员进行财务规划与物品购买。",
+                        url: "price_query.html",
+                        links: []
+                    },
+                    {
+                        name: "村规角色卡",
+                        icon: "📝",
+                        description: "适用于本团的村规角色卡模板。",
+                        url: "https://bugtower.top/%E8%B0%83%E6%9F%A5%E5%91%98%E6%A1%A3%E6%A1%88/calculator.html",
+                        links: []
+                    }
+                ]
+            }
+        };
+
+        function showFiles(category) {
+            console.log('showFiles called with category:', category); // 调试日志
+
+            const grid = document.getElementById('investigators-grid');
+            const contentTitle = document.getElementById('content-title');
+            const contentDescription = document.getElementById('content-description');
+
+            if (!grid) {
+                console.error('Required elements not found:', { grid });
+                return;
+            }
+
+            // 更新导航栏激活状态
+            const navLinks = document.querySelectorAll('.nav-link');
+            navLinks.forEach(link => {
+                link.classList.remove('active');
+                if (link.onclick && link.onclick.toString().includes(`showFiles('${category}')`)) {
+                    link.classList.add('active');
+                }
+            });
+
+            grid.innerHTML = '';
+            grid.classList.add('active');
+
+            const categoryData = archiveData[category];
+
+            if (!categoryData) {
+                console.error('Category data not found for:', category);
+                grid.innerHTML = '<div class="no-files">未找到相关档案</div>';
+                return;
+            }
+
+            // 更新内容标题和描述
+            if (contentTitle) {
+                contentTitle.textContent = categoryData.title;
+            }
+            if (contentDescription) {
+                contentDescription.textContent = categoryData.description;
+            }
+
+            console.log('Processing files:', categoryData.files.length);
+
+            categoryData.files.forEach((file, index) => {
+                console.log('Creating card for file:', file.name);
+                const card = document.createElement('div');
+                card.className = 'investigator-card';
+                card.onclick = () => {
+                    console.log('Card clicked:', file.name);
+                    if (file.url) {
+                        openFile(file.url);
+                    } else {
+                        showFileDetail(file);
+                    }
+                };
+
+                // 创建图标元素，支持图片和emoji切换
+                const iconElement = file.iconImage ? 
+                    `<img src="${file.iconImage}" alt="${file.name}" class="investigator-icon-image" onerror="this.style.display='none'; this.nextElementSibling.style.display='inline';">
+                     <span class="investigator-icon-fallback" style="display:none;">${file.icon}</span>` :
+                    file.icon;
+
+                card.innerHTML = `
+                    <div class="investigator-avatar">${iconElement}</div>
+                    <div class="investigator-name">${file.name}</div>
+                    <div class="investigator-role">${(file.type || '') + (file.size ? (file.type ? ' ' : '') + file.size : '') + (file.date ? (file.type || file.size ? ' ' : '') + file.date : '')}</div>
+                    <div class="investigator-status">${file.status || ''}</div>
+                `;
+
+                grid.appendChild(card);
+            });
+
+            // 不再需要返回按钮，因为导航栏已经提供了分类切换功能
+
+            console.log('showFiles completed successfully');
+        }
+
+        function showFileDetail(file) {
+            console.log('showFileDetail called with file:', file.name);
+
+            const modal = document.getElementById('investigator-modal');
+            const modalBody = document.getElementById('modal-body');
+
+            if (!modal || !modalBody) {
+                console.error('Modal elements not found:', { modal, modalBody });
+                return;
+            }
+
+            // 获取当前域名和协议
+            const currentOrigin = window.location.origin;
+            const currentPath = window.location.pathname.substring(0, window.location.pathname.lastIndexOf('/') + 1);
+            const baseUrl = currentOrigin + currentPath;
+
+            // 生成链接HTML - 不显示URL，只显示标题和描述
+            function generateLinkHtml(link) {
+                let finalUrl = link.url;
+
+                // 如果不是完整URL，则进行拼接
+                if (!link.url.startsWith('http://') && !link.url.startsWith('https://')) {
+                    finalUrl = baseUrl + link.url;
+                }
+
+                return `
+                    <div class="file-link-item" style="margin-bottom: 15px; padding: 15px; background: rgba(255, 255, 255, 0.05); border-radius: 8px; border: 1px solid rgba(255, 255, 255, 0.1); transition: all 0.3s ease;">
+                        <div class="link-header" style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px;">
+                            <h4 style="color: #ffd700; margin: 0; font-size: 1.1em; font-weight: bold;">${link.title}</h4>
+                            <button onclick="openFile('${finalUrl}')" class="access-btn" style="background: linear-gradient(45deg, #ffd700, #ffed4e); color: #1a1a1a; border: none; padding: 6px 12px; border-radius: 4px; font-size: 0.85em; font-weight: bold; cursor: pointer; transition: all 0.3s ease;">
+                                <span style="margin-right: 4px;">📂</span>访问
+                            </button>
+                        </div>
+                        <p style="color: #cccccc; margin: 0; font-size: 0.9em; line-height: 1.4;">${link.description}</p>
+                    </div>
+                `;
+            }
+
+            const linksHtml = file.links ? file.links.map(generateLinkHtml).join('') : '';
+
+            modalBody.innerHTML = `
+                <span class="modal-close" onclick="closeModal()">&times;</span>
+                <div class="modal-body-container">
+                    <div class="detail-avatar">${file.icon}</div>
+                    <div class="detail-info">
+                        <h2 class="detail-name">${file.name}</h2>
+                        ${file.type ? `<p style="color: #b8860b; margin-bottom: 10px;">${file.type} 文件</p>` : ''}
+                        <div class="investigator-status">${file.status || ''}</div>
+                    </div>
+                    
+                    <div class="detail-section">
+                        <h3>档案概述</h3>
+                        <p style="line-height: 1.6; color: #e0e0e0;">${file.description || '此档案包含重要的调查资料和相关文档。'}</p>
+                    </div>
+                    
+                    <div class="detail-section">
+                        <h3>文件信息</h3>
+                        ${file.size ? `<p><strong>文件大小：</strong>${file.size}</p>` : ''}
+                        ${file.date ? `<p><strong>创建日期：</strong>${file.date}</p>` : ''}
+                        ${file.type ? `<p><strong>文件类型：</strong>${file.type}</p>` : ''}
+                    </div>
+                    
+                    ${file.links && file.links.length > 0 ? `
+                    <div class="detail-section">
+                        <h3>相关文件 (${file.links.length})</h3>
+                        <div class="file-links-container">
+                            ${linksHtml}
+                        </div>
+                    </div>
+                    ` : ''}
+                    
+
+                </div>
+            `;
+
+            modal.style.display = 'block';
+            console.log('Modal displayed successfully');
+
+            // 为模态框内容容器初始化滚动条
+            setTimeout(() => {
+                try {
+                    const { OverlayScrollbars } = OverlayScrollbarsGlobal;
+                    const modalBodyContainer = modal.querySelector('.modal-body-container');
+
+                    if (modalBodyContainer && OverlayScrollbars) {
+                        OverlayScrollbars(modalBodyContainer, {
+                            className: 'os-theme-dark',
+                            resize: 'none',
+                            sizeAutoCapable: true,
+                            clipAlways: true,
+                            normalizeRTL: true,
+                            paddingAbsolute: false,
+                            autoUpdate: true,
+                            autoUpdateInterval: 33,
+                            updateOnLoad: true,
+                            nativeScrollbarsOverlaid: {
+                                showNativeScrollbars: false,
+                                initialize: true
+                            },
+                            overflowBehavior: {
+                                x: 'hidden',
+                                y: 'scroll'
+                            },
+                            scrollbars: {
+                                visibility: 'auto',
+                                autoHide: 'move',
+                                autoHideDelay: 1300,
+                                dragScrolling: true,
+                                clickScrolling: false,
+                                touchSupport: true,
+                                snapHandle: false
+                            }
+                        });
+                        console.log('OverlayScrollbars initialized successfully');
+                    }
+                } catch (error) {
+                    console.warn('OverlayScrollbars initialization failed:', error);
+                }
+            }, 50);
+        }
+
+        function openFile(url) {
+            console.log('openFile called with URL:', url);
+            // 在新窗口中打开文件
+            try {
+                window.open(url, '_blank');
+                console.log('File opened successfully');
+            } catch (error) {
+                console.error('Error opening file:', error);
+                alert('无法打开文件：' + error.message);
+            }
+        }
+
+        function copyUrl(url) {
+            console.log('copyUrl called with URL:', url);
+            // 复制URL到剪贴板
+            navigator.clipboard.writeText(url).then(function () {
+                console.log('URL copied successfully');
+                alert('文件链接已复制到剪贴板');
+            }, function (err) {
+                console.error('复制失败: ', err);
+                // 备用方案
+                const textArea = document.createElement('textarea');
+                textArea.value = url;
+                document.body.appendChild(textArea);
+                textArea.select();
+                document.execCommand('copy');
+                document.body.removeChild(textArea);
+                console.log('URL copied using fallback method');
+                alert('文件链接已复制到剪贴板');
+            });
+        }
+
+        function closeModal() {
+            console.log('closeModal called');
+            const modal = document.getElementById('investigator-modal');
+            if (modal) {
+                modal.style.display = 'none';
+                console.log('Modal closed successfully');
+            } else {
+                console.error('Modal element not found');
+            }
+        }
+
+        // 导航栏标签切换功能
+        function showTab(tabId) {
+            // 移除所有导航链接的active类
+            const navLinks = document.querySelectorAll('.nav-link');
+            navLinks.forEach(link => {
+                if (link.onclick && link.onclick.toString().includes('showTab')) {
+                    link.classList.remove('active');
+                }
+            });
+
+            // 为当前点击的链接添加active类
+            event.target.closest('.nav-link').classList.add('active');
+
+            // 隐藏所有标签内容
+            const tabContents = document.querySelectorAll('.tab-content');
+            tabContents.forEach(content => {
+                content.classList.remove('active');
+            });
+
+            // 显示对应的标签内容
+            const targetTab = document.getElementById(tabId);
+            if (targetTab) {
+                targetTab.classList.add('active');
+            }
+        }
+
+        // 创建浮动粒子效果
+        function createParticles() {
+            const container = document.querySelector('.floating-particles');
+
+            for (let i = 0; i < 50; i++) {
+                const particle = document.createElement('div');
+                particle.className = 'particle';
+                particle.style.left = Math.random() * 100 + '%';
+                particle.style.animationDelay = Math.random() * 6 + 's';
+                particle.style.animationDuration = (Math.random() * 3 + 3) + 's';
+                container.appendChild(particle);
+            }
+        }
+
+        // 点击模态框外部关闭
+        window.onclick = function (event) {
+            const modal = document.getElementById('investigator-modal');
+            if (event.target === modal) {
+                closeModal();
+            }
+        }
+
+        // 初始化
+        document.addEventListener('DOMContentLoaded', function () {
+            createParticles();
+
+            // 默认显示调查报告分类
+            showFiles('reports');
+
+            // 初始化 OverlayScrollbars
+            const { OverlayScrollbars } = OverlayScrollbarsGlobal;
+
+            // 为整个页面body初始化滚动条
+            OverlayScrollbars(document.body, {
+                className: 'os-theme-dark',
+                resize: 'none',
+                sizeAutoCapable: true,
+                clipAlways: true,
+                normalizeRTL: true,
+                paddingAbsolute: false,
+                autoUpdate: true,
+                autoUpdateInterval: 33,
+                updateOnLoad: true,
+                nativeScrollbarsOverlaid: {
+                    showNativeScrollbars: false,
+                    initialize: true
+                },
+                overflowBehavior: {
+                    x: 'scroll',
+                    y: 'scroll'
+                },
+                scrollbars: {
+                    visibility: 'auto',
+                    autoHide: 'never',
+                    autoHideDelay: 1300,
+                    dragScrolling: true,
+                    clickScrolling: false,
+                    touchSupport: true,
+                    snapHandle: false
+                }
+            });
+        });
+    </script>
+
+    <!-- 页面底部氛围引言 -->
+    <footer class="page-footer">
+        <div class="atmosphere-quote">
+            <p>你见过无法逾越的深邃黑暗，你感受过某一片沉甸甸的雪落在你肩头，而现在唯余寂静。</p>
+        </div>
+    </footer>
+
+</body>
+
+</html>

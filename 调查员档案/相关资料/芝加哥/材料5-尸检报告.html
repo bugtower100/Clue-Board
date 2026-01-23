@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Autopsy Report - Bruno Lanzetti</title>
+  <style>
+    body {
+      font-family: "Segoe UI", sans-serif;
+      background: #f0f4f8;
+      padding: 40px 20px;
+      color: #222;
+    }
+
+    .report-container {
+      background: #fff;
+      padding: 40px;
+      max-width: 900px;
+      margin: auto;
+      border: 1px solid #ccc;
+      box-shadow: 1px 1px 3px #eee; /* 拟物阴影模拟纸张浮起 */
+    }
+
+    h1, h2 {
+      text-align: center;
+      margin: 0;
+    }
+
+    h2 {
+      font-weight: normal;
+      font-size: 1.2em;
+      color: #555;
+      margin-bottom: 10px;
+    }
+
+    hr {
+      border: none;
+      border-top: 1px solid #ddd;
+    }
+
+    .section {
+      border-top: 1px solid #ddd;
+      padding-top: 20px;
+      margin-top: 20px;
+    }
+
+    .section:first-of-type {
+      border-top: none;
+      padding-top: 0;
+      margin-top: 0;
+    }
+
+    .section-title {
+      background-color: #f0f4f8;
+      padding: 8px 12px;
+      font-weight: bold;
+      margin-bottom: 10px;
+      border-left: 4px solid #aac;
+    }
+
+    .info-grid {
+      display: grid;
+      grid-template-columns: 120px auto;
+      row-gap: 8px;
+      column-gap: 16px;
+    }
+
+    .info-label {
+      text-align: right;
+      font-weight: bold;
+      padding: 4px;
+    }
+
+    .info-value {
+      text-align: left;
+      padding: 4px;
+    }
+
+    .value {
+      margin-left: 20px;
+    }
+
+    .mono {
+      font-family: "Courier New", monospace;
+    }
+
+    ul.value {
+      padding-left: 40px;
+    }
+
+    table.report-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 10px;
+    }
+
+    table.report-table th,
+    table.report-table td {
+      border: 1px solid #ccc;
+      padding: 8px;
+      text-align: left;
+    }
+
+    table.report-table th {
+      background-color: #e6f0f5;
+    }
+
+    table.report-table tr:nth-child(even) td {
+      background-color: #f9fbfc;
+    }
+
+    .highlight-fatal {
+      color: #c00;
+      font-weight: bold;
+    }
+
+    /* 打印优化 */
+    @media print {
+      body {
+        background: white;
+        padding: 0;
+        margin: 0;
+      }
+
+      .report-container {
+        box-shadow: none;
+        border: none;
+      }
+
+      .no-print {
+        display: none !important;
+      }
+
+      @page {
+        size: A4;
+        margin: 15mm;
+        @bottom-center {
+          content: "Page " counter(page) " of " counter(pages);
+          font-size: 10pt;
+          color: #666;
+        }
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="report-container">
+    <h1>Autopsy Report</h1>
+    <p style="color: #666; font-style: italic; margin-top: 5px; text-align: center; font-size: 16px;">尸检报告</p>
+    <h2>Cook County, Illinois, Office of the Medical Examiner</h2>
+    <p style="color: #666; font-style: italic; margin-top: 5px; text-align: center; font-size: 14px;">法医检验办公室 伊利诺伊州库克县</p>
+    <hr>
+
+    <div class="section">
+      <div class="section-title">Autopsy Report</div>
+      <p style="color: #666; font-style: italic; margin-top: 5px; margin-bottom: 15px; font-size: 14px;">尸检报告</p>
+      <div class="info-grid">
+        <div class="info-label">Case Number:</div>
+        <div class="info-value mono">ME-09-12687</div>
+
+        <div class="info-label">Deceased Name:</div>
+        <div class="info-value">Bruno Lanzetti</div>
+
+        <div class="info-label">Age:</div>
+        <div class="info-value">27</div>
+
+        <div class="info-label">Gender:</div>
+        <div class="info-value">Male</div>
+
+        <div class="info-label">Race:</div>
+        <div class="info-value">W (White)</div>
+
+        <div class="info-label">Date of Examination:</div>
+        <div class="info-value">December 22, 2009</div>
+
+        <div class="info-label">Performed by:</div>
+        <div class="info-value">Dr. Angelina Dibert, Medical Examiner Pathologist</div>
+      </div>
+      <p style="color: #666; font-style: italic; margin-top: 15px; font-size: 14px;">
+        案号：ME-09-12687<br>
+        死者姓名：布鲁诺·兰泽蒂<br>
+        年龄：27<br>
+        性别：男性<br>
+        种族：W (White)<br>
+        检查日期：2009年12月22日<br>
+        执行人：法医病理学家安吉莉娜·迪伯特博士
+      </p>
+    </div>
+
+    <div class="section">
+      <div class="section-title">I. Summary of Circumstances</div>
+      <p style="color: #666; font-style: italic; margin-top: 5px; margin-bottom: 15px; font-size: 14px;">I. 情况摘要</p>
+      <p class="value">
+        The decedent's body was discovered in a drainage ditch near 25 Blue Island Avenue on the morning of December 22, 2009, at approximately 06:20. The body was reportedly found by a milk delivery person and recovered from the scene by Chicago Police Department (CPD) officers.
+      </p>
+      <p style="color: #666; font-style: italic; margin-top: 10px; font-size: 14px;">
+        死者遗体于在蓝岛大街25号附近的排水沟内被发现，时间是2009年12月22日早晨06:20。据称，遗体由送奶工发现，并由芝加哥警察局（CPD）警员在现场提取。
+      </p>
+    </div>
+
+    <div class="section">
+      <div class="section-title">II. Condition of the Body</div>
+      <p style="color: #666; font-style: italic; margin-top: 5px; margin-bottom: 15px; font-size: 14px;">II. 尸体状况</p>
+      <p class="value">
+        Preliminary examination revealed that the body was in an advanced state of decomposition, with multiple postmortem injuries and signs of environmental exposure. Specifically:
+      </p>
+      <p style="color: #666; font-style: italic; margin-top: 10px; margin-bottom: 10px; font-size: 14px;">
+        初步检查发现，尸体已处于高度腐烂状态，并伴有多处死后创伤及环境暴露迹象。具体包括：
+      </p>
+      <ul class="value">
+        <li class="highlight-fatal">The body sustained severe damage, with significant loss of soft tissue.</li>
+        <li class="highlight-fatal">The tongue was missing, possibly removed before or after death by an unknown means.</li>
+        <li>Evidence of rodent activity, including typical gnaw marks on exposed limbs and facial structures.</li>
+        <li class="highlight-fatal">The deceased exhibited severe blood loss, with significant internal and external bleeding evident.</li>
+        <li>The body was found in a state of static water immersion, with an estimated immersion time of several hours. Skin sloughing and waterlogged softening consistent with prolonged immersion.</li>
+      </ul>
+      <ul style="color: #666; font-style: italic; margin-top: 10px; font-size: 14px; padding-left: 40px;">
+        <li>尸体遭受严重毁损，大量软组织缺失。</li>
+        <li>舌头缺失，可能死前或死后以不明方式被移除。</li>
+        <li>存在啮齿类动物活动迹象，包括暴露的四肢和面部结构上的典型啮咬痕迹。</li>
+        <li>死者出现严重失血，大量内外出血表现明显。</li>
+        <li>尸体被发现时处于静水浸泡状态，浸泡时间估计数小时。皮肤滑脱和水浸软化现象与长时间浸泡一致。</li>
+      </ul>
+    </div>
+
+    <div class="section">
+      <div class="section-title">III. Time of Death</div>
+      <p style="color: #666; font-style: italic; margin-top: 5px; margin-bottom: 15px; font-size: 14px;">III. 死亡时间</p>
+      <p class="value">
+        Due to the degree of decomposition and exposure to the aquatic environment, the postmortem interval cannot be precisely determined. The estimated time of death is consistent with approximately 8 to 24 hours prior to discovery, but remains uncertain.
+      </p>
+      <p style="color: #666; font-style: italic; margin-top: 10px; font-size: 14px;">
+        由于尸体分解程度和水环境暴露，无法确切确定死后间隔时间。估计死亡时间与发现前约8至24小时一致，但仍不确定。
+      </p>
+    </div>
+
+    <div class="section">
+      <div class="section-title">IV. Cause and Manner of Death (Preliminary)</div>
+      <p style="color: #666; font-style: italic; margin-top: 5px; margin-bottom: 15px; font-size: 14px;">IV. 死亡原因和方式（初步）</p>
+      <p class="value">
+        <strong>Cause of death:</strong> <span class="highlight-fatal">Pending (awaiting toxicological testing and further examination)</span> <br>
+        <strong>Manner of death:</strong> <span class="highlight-fatal">Homicide (suspected)</span>
+      </p>
+      <p style="color: #666; font-style: italic; margin-top: 10px; font-size: 14px;">
+        死亡原因：待定（待毒理学检测和进一步检查）<br>
+        死亡方式：疑似他杀
+      </p>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Toxicological Findings</div>
+      <p style="color: #666; font-style: italic; margin-top: 5px; margin-bottom: 15px; font-size: 14px;">【毒理学检测结果】</p>
+      <table class="report-table">
+        <thead>
+          <tr>
+            <th>Substance</th>
+            <th>Detected</th>
+            <th>Concentration</th>
+            <th>Reference Range</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Ethanol</td>
+            <td>No</td>
+            <td>0.05 %</td>
+            <td>&lt; 0.08 %</td>
+          </tr>
+          <tr>
+            <td>Morphine</td>
+            <td>No</td>
+            <td>0.01 mg/L</td>
+            <td>&lt; 0.02 mg/L</td>
+          </tr>
+          <tr>
+            <td>Cocaine</td>
+            <td>No</td>
+            <td>N/A</td>
+            <td>&lt; 0.01 mg/L</td>
+          </tr>
+        </tbody>
+      </table>
+      <p style="color: #666; font-style: italic; margin-top: 10px; font-size: 14px;">
+        【物质检测结果：乙醇、吗啡、可卡因均未检出异常】
+      </p>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Notes</div>
+      <p style="color: #666; font-style: italic; margin-top: 5px; margin-bottom: 15px; font-size: 14px;">【备注】</p>
+      <p class="value">
+        The circumstances of discovery are consistent with the victim being killed at another location and then transported to the discovery site. <span class="highlight-fatal">Severe dismemberment and blood loss indicate postmortem human intervention.</span> The investigation is ongoing.
+      </p>
+      <p style="color: #666; font-style: italic; margin-top: 10px; font-size: 14px;">
+        【发现情况与死者在其他地点被杀害后被转移至发现地点一致。严重的肢解和失血情况表明存在死后人为操作。调查正在进行中。】
+      </p>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Sign-off</div>
+      <p style="color: #666; font-style: italic; margin-top: 5px; margin-bottom: 15px; font-size: 14px;">【签名】</p>
+      <div class="info-grid">
+        <div class="info-label">Submission Date:</div>
+        <div class="info-value">December 23, 2009</div>
+
+        <div class="info-label">Signature:</div>
+        <div class="info-value">
+          Dr. Michelle Graham<br>
+          <em>Cook County Medical Examiner's Office – Forensic Pathologist</em>
+        </div>
+      </div>
+      <p style="color: #666; font-style: italic; margin-top: 15px; font-size: 14px;">
+        【提交日期：2009年12月23日<br>
+        签名：米歇尔·格雷汉姆博士<br>
+        库克县法医办公室 法医病理学家】
+      </p>
+    </div>
+  </div>
+</body>
+</html>
