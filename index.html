@@ -689,6 +689,178 @@
         .access-btn:active {
             transform: scale(0.98);
         }
+
+        .content-actions {
+            margin-top: 14px;
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .action-btn {
+            background: rgba(255, 215, 0, 0.08);
+            color: #ffd700;
+            border: 1px solid rgba(255, 215, 0, 0.25);
+            padding: 8px 12px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: 700;
+            transition: all 0.2s ease;
+        }
+
+        .action-btn:hover {
+            background: rgba(255, 215, 0, 0.15);
+            border-color: rgba(255, 215, 0, 0.4);
+            transform: translateY(-1px);
+        }
+
+        .action-btn.primary {
+            background: linear-gradient(45deg, #ffd700, #ffed4e);
+            color: #1a1a1a;
+            border: none;
+        }
+
+        .action-btn.primary:hover {
+            background: linear-gradient(45deg, #ffed4e, #ffd700);
+        }
+
+        .action-btn.danger {
+            background: rgba(255, 80, 80, 0.12);
+            color: #ff8080;
+            border-color: rgba(255, 80, 80, 0.25);
+        }
+
+        .action-btn.danger:hover {
+            background: rgba(255, 80, 80, 0.18);
+            border-color: rgba(255, 80, 80, 0.35);
+        }
+
+        .investigator-card {
+            position: relative;
+        }
+
+        .card-edit-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            width: 34px;
+            height: 34px;
+            border-radius: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            background: rgba(0, 0, 0, 0.35);
+            color: #ffd700;
+            cursor: pointer;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            transition: all 0.2s ease;
+        }
+
+        .investigator-card:hover .card-edit-btn {
+            display: flex;
+        }
+
+        .card-edit-btn:hover {
+            background: rgba(255, 215, 0, 0.12);
+            border-color: rgba(255, 215, 0, 0.35);
+        }
+
+        .editor-form {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-top: 10px;
+        }
+
+        .editor-field {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .editor-field.full {
+            grid-column: 1 / -1;
+        }
+
+        .editor-label {
+            color: #daa520;
+            font-size: 12px;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+
+        .editor-input,
+        .editor-textarea {
+            width: 100%;
+            padding: 10px 12px;
+            border-radius: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            background: rgba(255, 255, 255, 0.06);
+            color: #f5f5dc;
+            outline: none;
+            font-size: 14px;
+        }
+
+        .editor-input:focus,
+        .editor-textarea:focus {
+            border-color: rgba(255, 215, 0, 0.35);
+            box-shadow: 0 0 0 3px rgba(255, 215, 0, 0.08);
+        }
+
+        .editor-textarea {
+            min-height: 90px;
+            resize: vertical;
+            line-height: 1.6;
+        }
+
+        .links-editor {
+            margin-top: 14px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .link-editor-item {
+            padding: 12px;
+            border-radius: 12px;
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .link-editor-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+            gap: 10px;
+        }
+
+        .helper-text {
+            color: rgba(255, 255, 255, 0.65);
+            font-size: 12px;
+            line-height: 1.5;
+        }
+
+        .editor-json {
+            width: 100%;
+            min-height: 220px;
+            resize: vertical;
+            padding: 12px;
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            background: rgba(255, 255, 255, 0.06);
+            color: #f5f5dc;
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+            font-size: 12px;
+            outline: none;
+            line-height: 1.5;
+        }
+
+        .editor-json:focus {
+            border-color: rgba(255, 215, 0, 0.35);
+            box-shadow: 0 0 0 3px rgba(255, 215, 0, 0.08);
+        }
     </style>
 </head>
 
@@ -748,6 +920,7 @@
             <div class="content-header">
                 <h2 id="content-title">调查员档案管理</h2>
                 <p id="content-description">机密档案库，记录着那些深入未知领域的调查员们的足迹与发现。</p>
+                <div id="content-actions" class="content-actions"></div>
             </div>
 
             <div class="investigators-grid" id="investigators-grid">
@@ -767,8 +940,221 @@
     </div>
 
     <script>
-        // COC调查员档案数据
-        const archiveData = {
+        const STORAGE_KEY = 'investigator_archive_data_v1';
+        const EDITABLE_CATEGORIES = new Set(['reports', 'evidence', 'classified']);
+        const EDIT_AUTH_KEY = 'editor_unlocked_v1';
+        const EDIT_PASSWORD = 'arkham666';
+
+        function isEditorUnlocked() {
+            return sessionStorage.getItem(EDIT_AUTH_KEY) === '1';
+        }
+
+        function requestEditorUnlock() {
+            const input = prompt('请输入编辑密码');
+            if (input === EDIT_PASSWORD) {
+                sessionStorage.setItem(EDIT_AUTH_KEY, '1');
+                return true;
+            }
+            alert('密码错误');
+            return false;
+        }
+
+        function ensureEditorUnlocked() {
+            if (isEditorUnlocked()) return true;
+            return requestEditorUnlock();
+        }
+
+        function lockEditor() {
+            sessionStorage.removeItem(EDIT_AUTH_KEY);
+        }
+
+        function deepClone(value) {
+            return JSON.parse(JSON.stringify(value));
+        }
+
+        function safeJsonParse(text) {
+            try {
+                return { ok: true, value: JSON.parse(text) };
+            } catch (error) {
+                return { ok: false, error };
+            }
+        }
+
+        function mergeArchiveData(defaultData, storedData) {
+            if (!storedData || typeof storedData !== 'object') return deepClone(defaultData);
+            const result = deepClone(defaultData);
+            for (const key of Object.keys(result)) {
+                const storedCategory = storedData[key];
+                if (!storedCategory || typeof storedCategory !== 'object') continue;
+                result[key] = {
+                    ...result[key],
+                    ...storedCategory,
+                    files: Array.isArray(storedCategory.files) ? storedCategory.files : result[key].files
+                };
+            }
+            return result;
+        }
+
+        function loadArchiveData(defaultData) {
+            const raw = localStorage.getItem(STORAGE_KEY);
+            if (!raw) return deepClone(defaultData);
+            const parsed = safeJsonParse(raw);
+            if (!parsed.ok) return deepClone(defaultData);
+            return mergeArchiveData(defaultData, parsed.value);
+        }
+
+        function saveArchiveData() {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(archiveData));
+        }
+
+        function escapeHtml(value) {
+            return String(value ?? '')
+                .replaceAll('&', '&amp;')
+                .replaceAll('<', '&lt;')
+                .replaceAll('>', '&gt;')
+                .replaceAll('"', '&quot;')
+                .replaceAll("'", '&#039;');
+        }
+
+        function normalizeString(value) {
+            return String(value ?? '').trim();
+        }
+
+        const LOCAL_PROFILE_STORAGE_KEY = 'investigator_local_profiles_v1';
+        const LOCAL_PROFILE_TEMPLATE_URL = '调查员资料账单/哈里森·拉米雷斯.html';
+
+        function loadLocalProfiles() {
+            const raw = localStorage.getItem(LOCAL_PROFILE_STORAGE_KEY);
+            if (!raw) return {};
+            const parsed = safeJsonParse(raw);
+            if (!parsed.ok || !parsed.value || typeof parsed.value !== 'object') return {};
+            return parsed.value;
+        }
+
+        function saveLocalProfiles(profiles) {
+            localStorage.setItem(LOCAL_PROFILE_STORAGE_KEY, JSON.stringify(profiles));
+        }
+
+        function generateLocalProfileId() {
+            try {
+                if (crypto?.randomUUID) return crypto.randomUUID();
+            } catch { }
+            return 'lp_' + Date.now().toString(36) + '_' + Math.random().toString(36).slice(2, 10);
+        }
+
+        function getSiteBaseHref() {
+            const origin = window.location.origin;
+            const path = window.location.pathname.substring(0, window.location.pathname.lastIndexOf('/') + 1);
+            return origin + path;
+        }
+
+        function getBaseUrlNoHash() {
+            return window.location.href.split('#')[0];
+        }
+
+        function getLocalProfileIdFromHash() {
+            const hash = String(window.location.hash || '');
+            if (!hash.startsWith('#local-profile:')) return null;
+            const raw = hash.slice('#local-profile:'.length);
+            try {
+                return decodeURIComponent(raw);
+            } catch {
+                return raw;
+            }
+        }
+
+        function renderLocalProfileFromId(id) {
+            const profiles = loadLocalProfiles();
+            const html = profiles?.[id]?.html;
+            if (!html) {
+                alert('本地人物档案不存在或已被清除。');
+                window.location.hash = '';
+                return true;
+            }
+            document.open();
+            document.write(String(html));
+            document.close();
+            return true;
+        }
+
+        function fillProfileTemplateHtml(templateHtml, { id, name, player, photo, employeeId }) {
+            const baseHref = getSiteBaseHref();
+            let html = String(templateHtml || '');
+            if (!html) return '';
+
+            html = html.replace('<head>', `<head><base href="${escapeHtml(baseHref)}">`);
+            html = html.replace(/const\s+storageKey\s*=\s*STORAGE_PREFIX\s*\+\s*location\.pathname\s*;/, `const storageKey = STORAGE_PREFIX + 'local-profile:${id}';`);
+
+            const doc = new DOMParser().parseFromString(html, 'text/html');
+            const safeName = normalizeString(name) || '新调查员';
+            const safePlayer = normalizeString(player);
+            const safePhoto = normalizeString(photo);
+            const safeEmployeeId = normalizeString(employeeId);
+
+            const title = doc.querySelector('title');
+            if (title) title.textContent = `${safeName} - 调查员档案`;
+
+            const headerP = doc.querySelector('.page-header p');
+            if (headerP) headerP.textContent = `${safeName} - 调查员档案`;
+
+            const labels = Array.from(doc.querySelectorAll('.info-item'));
+            for (const item of labels) {
+                const label = normalizeString(item.querySelector('.info-label')?.textContent);
+                const valueEl = item.querySelector('.info-value');
+                if (!valueEl) continue;
+                if (label === '姓名') valueEl.textContent = safeName;
+                if (label === 'Player' && safePlayer) valueEl.textContent = safePlayer;
+                if (label === '员工编号' && safeEmployeeId) valueEl.textContent = safeEmployeeId;
+            }
+
+            const img = doc.querySelector('.employee-photo img');
+            if (img) {
+                if (safePhoto) {
+                    img.setAttribute('src', safePhoto);
+                    img.setAttribute('alt', safeName);
+                } else {
+                    img.setAttribute('alt', safeName);
+                }
+            }
+
+            const bg = doc.querySelector('.background-content');
+            if (bg) bg.innerHTML = '待补充';
+            const evalContent = doc.querySelector('.evaluation-content');
+            if (evalContent) evalContent.innerHTML = '待补充';
+
+            return '<!DOCTYPE html>\n' + doc.documentElement.outerHTML;
+        }
+
+        async function ensureLocalProfileForEntry(entry, existingId) {
+            const id = existingId || generateLocalProfileId();
+            const profiles = loadLocalProfiles();
+            if (profiles[id]?.html && existingId) return { id, url: `local-profile:${id}` };
+
+            const response = await fetch(LOCAL_PROFILE_TEMPLATE_URL, { cache: 'no-store' });
+            const templateHtml = await response.text();
+            const html = fillProfileTemplateHtml(templateHtml, {
+                id,
+                name: entry?.name,
+                player: entry?.player,
+                photo: entry?.photo,
+                employeeId: entry?.employeeId,
+            });
+            profiles[id] = {
+                id,
+                name: normalizeString(entry?.name),
+                updatedAt: Date.now(),
+                html
+            };
+            saveLocalProfiles(profiles);
+            return { id, url: `local-profile:${id}` };
+        }
+
+        function isUrlLike(value) {
+            const v = normalizeString(value);
+            return v.startsWith('http://') || v.startsWith('https://');
+        }
+
+        const DEFAULT_ARCHIVE_DATA = {
             reports: {
                 title: "调查报告",
                 description: "各类异常事件的详细存档——亲爱的调查员们，你们的ddl完成了吗:)",
@@ -1136,12 +1522,16 @@
             }
         };
 
+        let archiveData = loadArchiveData(DEFAULT_ARCHIVE_DATA);
+        let currentCategory = 'reports';
+
         function showFiles(category) {
             console.log('showFiles called with category:', category); // 调试日志
 
             const grid = document.getElementById('investigators-grid');
             const contentTitle = document.getElementById('content-title');
             const contentDescription = document.getElementById('content-description');
+            const contentActions = document.getElementById('content-actions');
 
             if (!grid) {
                 console.error('Required elements not found:', { grid });
@@ -1160,6 +1550,7 @@
             grid.innerHTML = '';
             grid.classList.add('active');
 
+            currentCategory = category;
             const categoryData = archiveData[category];
 
             if (!categoryData) {
@@ -1176,6 +1567,40 @@
                 contentDescription.textContent = categoryData.description;
             }
 
+            if (contentActions) {
+                contentActions.innerHTML = '';
+                if (EDITABLE_CATEGORIES.has(category)) {
+                    const lockBtn = document.createElement('button');
+                    lockBtn.className = 'action-btn';
+                    lockBtn.textContent = isEditorUnlocked() ? '锁定编辑' : '解锁编辑';
+                    lockBtn.onclick = () => {
+                        if (isEditorUnlocked()) {
+                            lockEditor();
+                            showFiles(category);
+                            return;
+                        }
+                        if (ensureEditorUnlocked()) showFiles(category);
+                    };
+                    contentActions.appendChild(lockBtn);
+                }
+                const exportBtn = document.createElement('button');
+                exportBtn.className = 'action-btn';
+                exportBtn.textContent = '导入/导出';
+                exportBtn.onclick = () => openDataManager();
+                contentActions.appendChild(exportBtn);
+
+                if (EDITABLE_CATEGORIES.has(category)) {
+                    const addBtn = document.createElement('button');
+                    addBtn.className = 'action-btn primary';
+                    addBtn.textContent = '新增';
+                    addBtn.onclick = () => {
+                        if (!ensureEditorUnlocked()) return;
+                        openEntryEditor({ category, index: null });
+                    };
+                    contentActions.appendChild(addBtn);
+                }
+            }
+
             console.log('Processing files:', categoryData.files.length);
 
             categoryData.files.forEach((file, index) => {
@@ -1187,7 +1612,7 @@
                     if (file.url) {
                         openFile(file.url);
                     } else {
-                        showFileDetail(file);
+                        showFileDetail({ category, index });
                     }
                 };
 
@@ -1204,6 +1629,20 @@
                     <div class="investigator-status">${file.status || ''}</div>
                 `;
 
+                if (EDITABLE_CATEGORIES.has(category)) {
+                    const editBtn = document.createElement('button');
+                    editBtn.className = 'card-edit-btn';
+                    editBtn.type = 'button';
+                    editBtn.textContent = '✎';
+                    editBtn.onclick = (event) => {
+                        event.preventDefault();
+                        event.stopPropagation();
+                        if (!ensureEditorUnlocked()) return;
+                        openEntryEditor({ category, index });
+                    };
+                    card.appendChild(editBtn);
+                }
+
                 grid.appendChild(card);
             });
 
@@ -1212,7 +1651,10 @@
             console.log('showFiles completed successfully');
         }
 
-        function showFileDetail(file) {
+        function showFileDetail({ category, index }) {
+            const categoryData = archiveData[category];
+            if (!categoryData || !Array.isArray(categoryData.files) || !categoryData.files[index]) return;
+            const file = categoryData.files[index];
             console.log('showFileDetail called with file:', file.name);
 
             const modal = document.getElementById('investigator-modal');
@@ -1251,6 +1693,16 @@
             }
 
             const linksHtml = file.links ? file.links.map(generateLinkHtml).join('') : '';
+            const editableToolbar = EDITABLE_CATEGORIES.has(category) ? (isEditorUnlocked() ? `
+                    <div class="content-actions" style="justify-content: center; margin-top: 10px;">
+                        <button class="action-btn primary" onclick="openEntryEditor({ category: '${escapeHtml(category)}', index: ${index} })">编辑</button>
+                        <button class="action-btn danger" onclick="deleteEntry('${escapeHtml(category)}', ${index})">删除</button>
+                    </div>
+                ` : `
+                    <div class="content-actions" style="justify-content: center; margin-top: 10px;">
+                        <button class="action-btn primary" onclick="unlockAndEdit('${escapeHtml(category)}', ${index})">解锁以编辑</button>
+                    </div>
+                `) : '';
 
             modalBody.innerHTML = `
                 <span class="modal-close" onclick="closeModal()">&times;</span>
@@ -1261,6 +1713,7 @@
                         ${file.type ? `<p style="color: #b8860b; margin-bottom: 10px;">${file.type} 文件</p>` : ''}
                         <div class="investigator-status">${file.status || ''}</div>
                     </div>
+                    ${editableToolbar}
                     
                     <div class="detail-section">
                         <h3>档案概述</h3>
@@ -1333,11 +1786,354 @@
             }, 50);
         }
 
+        function unlockAndEdit(category, index) {
+            if (!ensureEditorUnlocked()) return;
+            openEntryEditor({ category, index });
+        }
+
+        function deleteEntry(category, index) {
+            if (!ensureEditorUnlocked()) return;
+            const categoryData = archiveData[category];
+            if (!categoryData || !Array.isArray(categoryData.files) || !categoryData.files[index]) return;
+            const file = categoryData.files[index];
+            if (!confirm(`确定删除「${file.name}」吗？此操作会保存到浏览器本地。`)) return;
+            categoryData.files.splice(index, 1);
+            saveArchiveData();
+            closeModal();
+            showFiles(category);
+        }
+
+        function openEntryEditor({ category, index }) {
+            if (!ensureEditorUnlocked()) return;
+            const modal = document.getElementById('investigator-modal');
+            const modalBody = document.getElementById('modal-body');
+            if (!modal || !modalBody) return;
+
+            const categoryData = archiveData[category];
+            if (!categoryData || !Array.isArray(categoryData.files)) return;
+
+            const isNew = index === null || index === undefined;
+            const original = isNew ? {} : (categoryData.files[index] || {});
+
+            const working = deepClone({
+                name: original.name ?? '',
+                date: original.date ?? '',
+                status: original.status ?? '',
+                icon: original.icon ?? '📄',
+                description: original.description ?? '',
+                type: original.type ?? '',
+                size: original.size ?? (isNew && category === 'classified' ? '完整档案' : ''),
+                url: original.url ?? '',
+                iconImage: original.iconImage ?? '',
+                links: Array.isArray(original.links) ? original.links : []
+            });
+
+            const titleText = isNew ? '新增条目' : '编辑条目';
+
+            const showLinks = category === 'reports' || category === 'evidence' || category === 'research' || category === 'tools';
+            const showDate = category === 'reports' || category === 'evidence';
+            const showType = category === 'evidence' || category === 'research';
+            const showSize = category === 'classified';
+            const showUrl = category === 'classified' || category === 'tools';
+            const showIconImage = category === 'classified';
+
+            modalBody.innerHTML = `
+                <span class="modal-close" onclick="closeModal()">&times;</span>
+                <div class="modal-body-container">
+                    <div class="detail-section">
+                        <h3>${titleText}</h3>
+                        <div class="editor-form">
+                            <div class="editor-field">
+                                <div class="editor-label">name</div>
+                                <input class="editor-input" id="editor-name" value="${escapeHtml(working.name)}">
+                            </div>
+                            <div class="editor-field">
+                                <div class="editor-label">status</div>
+                                <input class="editor-input" id="editor-status" value="${escapeHtml(working.status)}">
+                            </div>
+                            ${showDate ? `
+                            <div class="editor-field">
+                                <div class="editor-label">date</div>
+                                <input class="editor-input" id="editor-date" value="${escapeHtml(working.date)}" placeholder="例如 2008-06-01">
+                            </div>
+                            ` : ''}
+                            ${showType ? `
+                            <div class="editor-field">
+                                <div class="editor-label">type</div>
+                                <input class="editor-input" id="editor-type" value="${escapeHtml(working.type)}">
+                            </div>
+                            ` : ''}
+                            ${showSize ? `
+                            <div class="editor-field">
+                                <div class="editor-label">size</div>
+                                <input class="editor-input" id="editor-size" value="${escapeHtml(working.size)}">
+                            </div>
+                            ` : ''}
+                            <div class="editor-field">
+                                <div class="editor-label">icon (emoji)</div>
+                                <input class="editor-input" id="editor-icon" value="${escapeHtml(working.icon)}">
+                            </div>
+                            ${showIconImage ? `
+                            <div class="editor-field full">
+                                <div class="editor-label">iconImage (path/url)</div>
+                                <input class="editor-input" id="editor-iconImage" value="${escapeHtml(working.iconImage)}" placeholder="例如 图标/路人.png">
+                                <div class="helper-text">可填写相对路径或完整 URL。若填写图片路径，将优先显示图片。</div>
+                            </div>
+                            ` : ''}
+                            ${showUrl ? `
+                            <div class="editor-field full">
+                                <div class="editor-label">url</div>
+                                <input class="editor-input" id="editor-url" value="${escapeHtml(working.url)}" placeholder="例如 调查员资料账单/哈里森·拉米雷斯.html">
+                            </div>
+                            ` : ''}
+                            <div class="editor-field full">
+                                <div class="editor-label">description (支持 HTML)</div>
+                                <textarea class="editor-textarea" id="editor-description">${escapeHtml(working.description)}</textarea>
+                            </div>
+                        </div>
+
+                        ${showLinks ? `
+                        <div class="detail-section" style="margin-top: 18px;">
+                            <h3>links</h3>
+                            <div class="helper-text">title/description 支持 HTML。url 可填写相对路径或完整 URL。</div>
+                            <div class="links-editor" id="links-editor"></div>
+                            <div class="content-actions" style="margin-top: 10px;">
+                                <button class="action-btn" type="button" onclick="addLinkEditorItem()">新增链接</button>
+                            </div>
+                        </div>
+                        ` : ''}
+
+                        <div class="content-actions" style="justify-content: center; margin-top: 16px;">
+                            <button class="action-btn primary" type="button" onclick="saveEntryEditor('${escapeHtml(category)}', ${isNew ? 'null' : index})">保存</button>
+                            <button class="action-btn" type="button" onclick="closeModal()">取消</button>
+                            ${!isNew ? `<button class="action-btn danger" type="button" onclick="deleteEntry('${escapeHtml(category)}', ${index})">删除</button>` : ''}
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            modal.style.display = 'block';
+
+            window.__entryEditorContext = { category, index: isNew ? null : index, showLinks };
+            if (showLinks) {
+                const container = document.getElementById('links-editor');
+                if (container) {
+                    container.innerHTML = '';
+                    (working.links || []).forEach((link, linkIndex) => {
+                        container.appendChild(buildLinkEditorItem(link, linkIndex));
+                    });
+                }
+            }
+        }
+
+        function buildLinkEditorItem(link, linkIndex) {
+            const wrapper = document.createElement('div');
+            wrapper.className = 'link-editor-item';
+            wrapper.dataset.index = String(linkIndex);
+            wrapper.innerHTML = `
+                <div class="link-editor-header">
+                    <div style="font-weight: 800; color: #ffd700;">链接 #${linkIndex + 1}</div>
+                    <button class="action-btn danger" type="button" onclick="removeLinkEditorItem(${linkIndex})">删除链接</button>
+                </div>
+                <div class="editor-form">
+                    <div class="editor-field full">
+                        <div class="editor-label">title (支持 HTML)</div>
+                        <textarea class="editor-textarea" data-field="title">${escapeHtml(link?.title ?? '')}</textarea>
+                    </div>
+                    <div class="editor-field full">
+                        <div class="editor-label">url</div>
+                        <input class="editor-input" data-field="url" value="${escapeHtml(link?.url ?? '')}">
+                        <div class="helper-text">若填写相对路径，请确保文件存在于站点目录下并可访问。</div>
+                    </div>
+                    <div class="editor-field full">
+                        <div class="editor-label">description (支持 HTML)</div>
+                        <textarea class="editor-textarea" data-field="description">${escapeHtml(link?.description ?? '')}</textarea>
+                    </div>
+                </div>
+            `;
+            return wrapper;
+        }
+
+        function addLinkEditorItem() {
+            const ctx = window.__entryEditorContext;
+            if (!ctx?.showLinks) return;
+            const container = document.getElementById('links-editor');
+            if (!container) return;
+            const items = Array.from(container.querySelectorAll('.link-editor-item'));
+            const nextIndex = items.length;
+            container.appendChild(buildLinkEditorItem({ title: '', url: '', description: '' }, nextIndex));
+        }
+
+        function removeLinkEditorItem(linkIndex) {
+            const container = document.getElementById('links-editor');
+            if (!container) return;
+            const node = container.querySelector(`.link-editor-item[data-index="${linkIndex}"]`);
+            if (node) node.remove();
+            Array.from(container.querySelectorAll('.link-editor-item')).forEach((item, idx) => {
+                item.dataset.index = String(idx);
+                const title = item.querySelector('.link-editor-header > div');
+                const btn = item.querySelector('.link-editor-header button');
+                if (title) title.textContent = `链接 #${idx + 1}`;
+                if (btn) btn.setAttribute('onclick', `removeLinkEditorItem(${idx})`);
+            });
+        }
+
+        async function saveEntryEditor(category, indexOrNull) {
+            if (!ensureEditorUnlocked()) return;
+            const categoryData = archiveData[category];
+            if (!categoryData || !Array.isArray(categoryData.files)) return;
+            const isNew = indexOrNull === null || indexOrNull === undefined;
+
+            const name = normalizeString(document.getElementById('editor-name')?.value);
+            const status = normalizeString(document.getElementById('editor-status')?.value);
+            const date = normalizeString(document.getElementById('editor-date')?.value);
+            const icon = normalizeString(document.getElementById('editor-icon')?.value) || '📄';
+            const description = normalizeString(document.getElementById('editor-description')?.value);
+            const type = normalizeString(document.getElementById('editor-type')?.value);
+            const size = normalizeString(document.getElementById('editor-size')?.value);
+            const url = normalizeString(document.getElementById('editor-url')?.value);
+            const iconImage = normalizeString(document.getElementById('editor-iconImage')?.value);
+
+            if (!name) {
+                alert('name 不能为空');
+                return;
+            }
+
+            let links = [];
+            const linksContainer = document.getElementById('links-editor');
+            if (linksContainer) {
+                links = Array.from(linksContainer.querySelectorAll('.link-editor-item')).map(item => {
+                    const titleEl = item.querySelector('[data-field="title"]');
+                    const urlEl = item.querySelector('[data-field="url"]');
+                    const descEl = item.querySelector('[data-field="description"]');
+                    return {
+                        title: normalizeString(titleEl?.value),
+                        url: normalizeString(urlEl?.value),
+                        description: normalizeString(descEl?.value),
+                    };
+                }).filter(l => l.title || l.url || l.description);
+            }
+
+            const nextEntry = {};
+            nextEntry.name = name;
+            if (date) nextEntry.date = date;
+            if (status) nextEntry.status = status;
+            if (icon) nextEntry.icon = icon;
+            if (description) nextEntry.description = description;
+            if (type) nextEntry.type = type;
+            if (size) nextEntry.size = size;
+            if (url) nextEntry.url = url;
+            if (iconImage) nextEntry.iconImage = iconImage;
+            if (links.length) nextEntry.links = links;
+
+            if (category === 'classified' && !nextEntry.url) {
+                try {
+                    const { id, url: localUrl } = await ensureLocalProfileForEntry({
+                        name,
+                        player: '',
+                        photo: iconImage,
+                        employeeId: ''
+                    });
+                    nextEntry.url = localUrl;
+                    nextEntry.localProfileId = id;
+                } catch (error) {
+                    alert('创建本地人物档案失败：' + (error?.message || '未知错误'));
+                    return;
+                }
+            }
+
+            if (isNew) {
+                categoryData.files.unshift(nextEntry);
+            } else {
+                categoryData.files[indexOrNull] = { ...categoryData.files[indexOrNull], ...nextEntry };
+            }
+
+            saveArchiveData();
+            closeModal();
+            showFiles(category);
+        }
+
+        function openDataManager() {
+            const modal = document.getElementById('investigator-modal');
+            const modalBody = document.getElementById('modal-body');
+            if (!modal || !modalBody) return;
+
+            const json = JSON.stringify(archiveData, null, 2);
+            modalBody.innerHTML = `
+                <span class="modal-close" onclick="closeModal()">&times;</span>
+                <div class="modal-body-container">
+                    <div class="detail-section">
+                        <h3>导入 / 导出</h3>
+                        <div class="helper-text">所有修改仅保存在浏览器本地（localStorage）。导出 JSON 可备份或迁移到其他设备。</div>
+                        <textarea class="editor-json" id="data-json">${escapeHtml(json)}</textarea>
+                        <div class="content-actions" style="justify-content: center; margin-top: 12px;">
+                            <button class="action-btn" type="button" onclick="copyDataJson()">复制</button>
+                            <button class="action-btn primary" type="button" onclick="importDataJsonSecure()">导入并应用</button>
+                            <button class="action-btn danger" type="button" onclick="resetDataToDefaultSecure()">重置为初始数据</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            modal.style.display = 'block';
+        }
+
+        function copyDataJson() {
+            const el = document.getElementById('data-json');
+            if (!el) return;
+            const text = el.value;
+            navigator.clipboard.writeText(text).then(() => {
+                alert('已复制');
+            }).catch(() => {
+                el.select();
+                document.execCommand('copy');
+                alert('已复制');
+            });
+        }
+
+        function importDataJson() {
+            const el = document.getElementById('data-json');
+            if (!el) return;
+            const parsed = safeJsonParse(el.value);
+            if (!parsed.ok) {
+                alert('JSON 解析失败：' + (parsed.error?.message || '未知错误'));
+                return;
+            }
+            archiveData = mergeArchiveData(DEFAULT_ARCHIVE_DATA, parsed.value);
+            saveArchiveData();
+            closeModal();
+            showFiles(currentCategory || 'reports');
+        }
+
+        function resetDataToDefault() {
+            if (!confirm('确定重置为初始数据吗？本地编辑的内容会被覆盖。')) return;
+            archiveData = deepClone(DEFAULT_ARCHIVE_DATA);
+            saveArchiveData();
+            closeModal();
+            showFiles(currentCategory || 'reports');
+        }
+
+        function importDataJsonSecure() {
+            if (!ensureEditorUnlocked()) return;
+            importDataJson();
+        }
+
+        function resetDataToDefaultSecure() {
+            if (!ensureEditorUnlocked()) return;
+            resetDataToDefault();
+        }
+
         function openFile(url) {
             console.log('openFile called with URL:', url);
             // 在新窗口中打开文件
             try {
-                window.open(url, '_blank');
+                const raw = normalizeString(url);
+                if (raw.startsWith('local-profile:')) {
+                    const id = raw.slice('local-profile:'.length);
+                    const target = getBaseUrlNoHash() + '#local-profile:' + encodeURIComponent(id);
+                    window.open(target, '_blank');
+                } else {
+                    window.open(url, '_blank');
+                }
                 console.log('File opened successfully');
             } catch (error) {
                 console.error('Error opening file:', error);
@@ -1426,6 +2222,11 @@
 
         // 初始化
         document.addEventListener('DOMContentLoaded', function () {
+            const localProfileId = getLocalProfileIdFromHash();
+            if (localProfileId) {
+                renderLocalProfileFromId(localProfileId);
+                return;
+            }
             createParticles();
 
             // 默认显示调查报告分类

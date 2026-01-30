@@ -712,7 +712,888 @@
     </div>
 
     <script>
+        (function () {
+            const STORAGE_PREFIX = 'investigator_profile_overrides_v1:';
+            const storageKey = STORAGE_PREFIX + location.pathname;
+            const EDIT_AUTH_KEY = 'editor_unlocked_v1';
+            const EDIT_PASSWORD = 'arkham666';
 
+            function isEditorUnlocked() {
+                return sessionStorage.getItem(EDIT_AUTH_KEY) === '1';
+            }
+
+            function requestEditorUnlock() {
+                const input = prompt('请输入编辑密码');
+                if (input === EDIT_PASSWORD) {
+                    sessionStorage.setItem(EDIT_AUTH_KEY, '1');
+                    return true;
+                }
+                alert('密码错误');
+                return false;
+            }
+
+            function ensureEditorUnlocked() {
+                if (isEditorUnlocked()) return true;
+                return requestEditorUnlock();
+            }
+
+            function safeJsonParse(text) {
+                try {
+                    return { ok: true, value: JSON.parse(text) };
+                } catch (error) {
+                    return { ok: false, error };
+                }
+            }
+
+            function loadOverrides() {
+                const raw = localStorage.getItem(storageKey);
+                if (!raw) return {};
+                const parsed = safeJsonParse(raw);
+                if (!parsed.ok || !parsed.value || typeof parsed.value !== 'object') return {};
+                return parsed.value;
+            }
+
+            function saveOverrides(overrides) {
+                localStorage.setItem(storageKey, JSON.stringify(overrides));
+            }
+
+            function normalizeText(value) {
+                return String(value ?? '').trim();
+            }
+
+            function parseValues(text) {
+                const map = {};
+                const re = /([^\s:：]+(?:（[^）]+）)?)[：:]\s*([0-9]+(?:\/[0-9]+)?)/g;
+                let match;
+                while ((match = re.exec(text)) !== null) {
+                    const key = normalizeText(match[1]);
+                    const value = normalizeText(match[2]);
+                    if (key) map[key] = value;
+                }
+                return map;
+            }
+
+            function injectStyle() {
+                const style = document.createElement('style');
+                style.textContent = `
+                    .value-import-fab{
+                        position: fixed;
+                        right: 18px;
+                        bottom: 18px;
+                        z-index: 9999;
+                        background: linear-gradient(45deg, #ffd700, #ffed4e);
+                        color: #1a1a1a;
+                        border: none;
+                        border-radius: 14px;
+                        padding: 10px 14px;
+                        font-weight: 800;
+                        cursor: pointer;
+                        box-shadow: 0 10px 30px rgba(0,0,0,0.35);
+                    }
+                    .value-import-fab:hover{ transform: translateY(-1px); }
+                    .insurance-edit-fab{
+                        position: fixed;
+                        right: 18px;
+                        bottom: 68px;
+                        z-index: 9999;
+                        background: rgba(255, 215, 0, 0.10);
+                        color: #ffd700;
+                        border: 1px solid rgba(255, 215, 0, 0.25);
+                        border-radius: 14px;
+                        padding: 10px 14px;
+                        font-weight: 800;
+                        cursor: pointer;
+                        box-shadow: 0 10px 30px rgba(0,0,0,0.35);
+                        backdrop-filter: blur(6px);
+                    }
+                    .insurance-edit-fab:hover{ transform: translateY(-1px); background: rgba(255, 215, 0, 0.14); border-color: rgba(255, 215, 0, 0.4); }
+                    .value-import-mask{
+                        position: fixed;
+                        inset: 0;
+                        background: rgba(0,0,0,0.75);
+                        z-index: 10000;
+                        display: none;
+                        align-items: center;
+                        justify-content: center;
+                        padding: 16px;
+                        backdrop-filter: blur(6px);
+                    }
+                    .value-import-modal{
+                        width: min(900px, 96vw);
+                        max-height: 90vh;
+                        overflow: auto;
+                        background: rgba(26,26,26,0.96);
+                        border: 1px solid rgba(255, 215, 0, 0.18);
+                        border-radius: 16px;
+                        padding: 18px;
+                        color: #f5f5dc;
+                        box-shadow: 0 20px 60px rgba(0,0,0,0.55);
+                    }
+                    .value-import-title{
+                        display:flex;
+                        justify-content: space-between;
+                        align-items: center;
+                        gap: 12px;
+                        margin-bottom: 12px;
+                    }
+                    .value-import-title h3{
+                        margin: 0;
+                        color: #ffd700;
+                        font-size: 18px;
+                        letter-spacing: 1px;
+                    }
+                    .value-import-close{
+                        width: 40px;
+                        height: 40px;
+                        border-radius: 12px;
+                        border: 1px solid rgba(255,255,255,0.12);
+                        background: rgba(255,255,255,0.06);
+                        color: #f5f5dc;
+                        cursor: pointer;
+                        font-size: 20px;
+                        line-height: 1;
+                    }
+                    .value-import-close:hover{
+                        border-color: rgba(255,215,0,0.35);
+                        color: #ffd700;
+                    }
+                    .value-import-grid{
+                        display:grid;
+                        grid-template-columns: 1.1fr 0.9fr;
+                        gap: 14px;
+                    }
+                    @media (max-width: 860px){
+                        .value-import-grid{ grid-template-columns: 1fr; }
+                    }
+                    .value-import-textarea{
+                        width: 100%;
+                        min-height: 180px;
+                        resize: vertical;
+                        padding: 12px;
+                        border-radius: 12px;
+                        border: 1px solid rgba(255,255,255,0.12);
+                        background: rgba(255,255,255,0.06);
+                        color: #f5f5dc;
+                        outline: none;
+                        font-size: 14px;
+                        line-height: 1.6;
+                    }
+                    .value-import-textarea:focus{
+                        border-color: rgba(255,215,0,0.35);
+                        box-shadow: 0 0 0 3px rgba(255,215,0,0.08);
+                    }
+                    .value-import-actions{
+                        display:flex;
+                        flex-wrap: wrap;
+                        gap: 10px;
+                        margin-top: 10px;
+                    }
+                    .value-btn{
+                        background: rgba(255, 215, 0, 0.08);
+                        color: #ffd700;
+                        border: 1px solid rgba(255, 215, 0, 0.25);
+                        padding: 10px 12px;
+                        border-radius: 12px;
+                        cursor: pointer;
+                        font-weight: 800;
+                    }
+                    .value-btn:hover{
+                        background: rgba(255, 215, 0, 0.14);
+                        border-color: rgba(255, 215, 0, 0.4);
+                        transform: translateY(-1px);
+                    }
+                    .value-btn.primary{
+                        background: linear-gradient(45deg, #ffd700, #ffed4e);
+                        color: #1a1a1a;
+                        border: none;
+                    }
+                    .value-btn.danger{
+                        background: rgba(255, 80, 80, 0.14);
+                        color: #ff9a9a;
+                        border-color: rgba(255, 80, 80, 0.25);
+                    }
+                    .value-import-list{
+                        border: 1px solid rgba(255,255,255,0.10);
+                        background: rgba(255,255,255,0.04);
+                        border-radius: 12px;
+                        padding: 10px;
+                        max-height: 360px;
+                        overflow: auto;
+                    }
+                    .value-import-item{
+                        display:flex;
+                        align-items:center;
+                        justify-content: space-between;
+                        gap: 12px;
+                        padding: 10px;
+                        border-radius: 10px;
+                        border: 1px solid rgba(255,255,255,0.08);
+                        background: rgba(0,0,0,0.12);
+                        margin-bottom: 10px;
+                    }
+                    .value-import-item:last-child{ margin-bottom: 0; }
+                    .value-import-kv{
+                        display:flex;
+                        flex-direction: column;
+                        gap: 2px;
+                        min-width: 0;
+                    }
+                    .value-import-key{
+                        font-weight: 900;
+                        color: #ffd700;
+                        white-space: nowrap;
+                        overflow: hidden;
+                        text-overflow: ellipsis;
+                    }
+                    .value-import-val{
+                        color: rgba(245,245,220,0.9);
+                        font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+                        font-size: 12px;
+                    }
+                    .value-import-note{
+                        margin-top: 10px;
+                        color: rgba(245,245,220,0.72);
+                        font-size: 12px;
+                        line-height: 1.5;
+                    }
+                    .insurance-edit-section{
+                        margin-top: 14px;
+                        padding-top: 14px;
+                        border-top: 1px solid rgba(255,255,255,0.08);
+                    }
+                    .insurance-edit-section h4{
+                        margin: 0 0 10px 0;
+                        color: #ffd700;
+                        font-size: 14px;
+                        letter-spacing: 0.5px;
+                    }
+                    .insurance-edit-row{
+                        display:grid;
+                        grid-template-columns: 1.2fr 0.6fr 0.6fr 1.6fr;
+                        gap: 10px;
+                        margin-bottom: 10px;
+                        padding: 10px;
+                        border-radius: 12px;
+                        border: 1px solid rgba(255,255,255,0.08);
+                        background: rgba(0,0,0,0.12);
+                    }
+                    .insurance-edit-row.usage{
+                        grid-template-columns: 0.9fr 0.9fr 1.6fr 0.7fr;
+                    }
+                    .insurance-edit-row input{
+                        width: 100%;
+                        padding: 10px 12px;
+                        border-radius: 12px;
+                        border: 1px solid rgba(255,255,255,0.12);
+                        background: rgba(255,255,255,0.06);
+                        color: #f5f5dc;
+                        outline: none;
+                        font-size: 13px;
+                    }
+                    .insurance-edit-row input:focus{
+                        border-color: rgba(255,215,0,0.35);
+                        box-shadow: 0 0 0 3px rgba(255,215,0,0.08);
+                    }
+                    .insurance-edit-row .remove{
+                        grid-column: 1 / -1;
+                        justify-self: end;
+                    }
+                `;
+                document.head.appendChild(style);
+            }
+
+            function findInfoValueByLabel(labelText) {
+                const items = document.querySelectorAll('.info-item');
+                const target = normalizeText(labelText).toUpperCase();
+                for (const item of items) {
+                    const label = normalizeText(item.querySelector('.info-label')?.textContent).toUpperCase();
+                    if (label === target) return item.querySelector('.info-value');
+                }
+                return null;
+            }
+
+            function applyToInfo(key, value) {
+                const k = normalizeText(key);
+                if (!k) return false;
+                const upper = k.toUpperCase();
+                const candidates = [
+                    { keys: new Set(['HP', '生命', '生命值', '体力']), label: 'HP' },
+                    { keys: new Set(['MP', '魔法值', '法力', '理力']), label: 'MP' },
+                    { keys: new Set(['SAN', '理智']), label: 'SAN' }
+                ];
+                for (const c of candidates) {
+                    if (c.keys.has(k) || c.keys.has(upper)) {
+                        const el = findInfoValueByLabel(c.label);
+                        if (el) {
+                            el.textContent = String(value);
+                            return true;
+                        }
+                    }
+                }
+                return false;
+            }
+
+            function applyToAttributes(key, value) {
+                const k = normalizeText(key);
+                if (!k) return false;
+                const mapping = [
+                    { key: '力量', test: (t) => t.includes('力量') },
+                    { key: '敏捷', test: (t) => t.includes('敏捷') },
+                    { key: '体质', test: (t) => t.includes('体质') },
+                    { key: '体型', test: (t) => t.includes('体型') },
+                    { key: '外貌', test: (t) => t.includes('外貌') },
+                    { key: '智力', test: (t) => t.includes('智力') },
+                    { key: '意志', test: (t) => t.includes('意志') },
+                    { key: '教育', test: (t) => t.includes('教育') }
+                ];
+                const match = mapping.find(m => m.key === k);
+                if (!match) return false;
+                const nameCells = document.querySelectorAll('.attributes-table .attr-name');
+                for (const cell of nameCells) {
+                    const text = normalizeText(cell.textContent);
+                    if (match.test(text)) {
+                        const valueCell = cell.nextElementSibling;
+                        if (valueCell && valueCell.classList.contains('attr-value')) {
+                            valueCell.textContent = String(value);
+                            return true;
+                        }
+                    }
+                }
+                return false;
+            }
+
+            function buildSkillIndex() {
+                const map = new Map();
+                const rows = document.querySelectorAll('.skills-table tbody tr');
+                for (const row of rows) {
+                    const cells = row.querySelectorAll('td');
+                    if (cells.length < 4) continue;
+                    const n1 = normalizeText(cells[0].textContent);
+                    const v1 = cells[1];
+                    const n2 = normalizeText(cells[2].textContent);
+                    const v2 = cells[3];
+                    if (n1) map.set(n1, v1);
+                    if (n2) map.set(n2, v2);
+                }
+                return map;
+            }
+
+            function findSkillValueCell(skillName, skillIndex) {
+                const target = normalizeText(skillName);
+                if (!target) return null;
+                if (skillIndex.has(target)) return skillIndex.get(target);
+                for (const [name, cell] of skillIndex.entries()) {
+                    if (name.startsWith(target) || target.startsWith(name)) return cell;
+                }
+                return null;
+            }
+
+            function addSkill(skillName, value) {
+                const tableBody = document.querySelector('.skills-table tbody');
+                if (!tableBody) return false;
+                const rows = Array.from(tableBody.querySelectorAll('tr'));
+                const lastRow = rows.length ? rows[rows.length - 1] : null;
+                if (lastRow) {
+                    const cells = lastRow.querySelectorAll('td');
+                    if (cells.length >= 4) {
+                        const lastName2 = normalizeText(cells[2].textContent);
+                        if (!lastName2) {
+                            cells[2].textContent = skillName;
+                            cells[3].textContent = String(value);
+                            cells[3].classList.add('skill-value');
+                            return true;
+                        }
+                    }
+                }
+                const row = document.createElement('tr');
+                const td1 = document.createElement('td');
+                const td2 = document.createElement('td');
+                const td3 = document.createElement('td');
+                const td4 = document.createElement('td');
+                td1.textContent = skillName;
+                td2.textContent = String(value);
+                td2.className = 'skill-value';
+                td3.textContent = '';
+                td4.textContent = '';
+                td4.className = 'skill-value';
+                row.appendChild(td1);
+                row.appendChild(td2);
+                row.appendChild(td3);
+                row.appendChild(td4);
+                tableBody.appendChild(row);
+                return true;
+            }
+
+            function applyKeyValue(key, value) {
+                if (applyToInfo(key, value)) return true;
+                if (applyToAttributes(key, value)) return true;
+                const idx = buildSkillIndex();
+                const cell = findSkillValueCell(key, idx);
+                if (cell) {
+                    cell.textContent = String(value);
+                    cell.classList.add('skill-value');
+                    return true;
+                }
+                return addSkill(key, value);
+            }
+
+            function applyOverrides(overrides) {
+                for (const [key, value] of Object.entries(overrides || {})) {
+                    applyKeyValue(key, value);
+                }
+            }
+
+            function buildUi() {
+                const fab = document.createElement('button');
+                fab.className = 'value-import-fab';
+                fab.type = 'button';
+                fab.textContent = '导入/更新数值';
+
+                const mask = document.createElement('div');
+                mask.className = 'value-import-mask';
+
+                const modal = document.createElement('div');
+                modal.className = 'value-import-modal';
+
+                modal.innerHTML = `
+                    <div class="value-import-title">
+                        <h3>导入并选择更新项</h3>
+                        <button class="value-import-close" type="button" aria-label="close">×</button>
+                    </div>
+                    <div class="value-import-grid">
+                        <div>
+                            <textarea class="value-import-textarea" placeholder="粘贴数值文本，例如：\n力量:60  敏捷:70  体质:60  体型:60\n理智:20  生命:12/12  魔法值:9/9\n侦查:90  手枪:85"></textarea>
+                            <div class="value-import-actions">
+                                <button class="value-btn" type="button" data-action="parse">解析</button>
+                                <button class="value-btn primary" type="button" data-action="apply" disabled>应用所选</button>
+                                <button class="value-btn danger" type="button" data-action="clear">清除本页覆盖</button>
+                            </div>
+                            <div class="value-import-note">未匹配到的项目会自动加入到“技能值”表格中。修改将保存在浏览器本地，仅对当前设备生效。</div>
+                        </div>
+                        <div>
+                            <div class="value-import-list" data-role="list"></div>
+                        </div>
+                    </div>
+                `;
+
+                mask.appendChild(modal);
+                document.body.appendChild(fab);
+                document.body.appendChild(mask);
+
+                const closeBtn = modal.querySelector('.value-import-close');
+                const textarea = modal.querySelector('.value-import-textarea');
+                const parseBtn = modal.querySelector('[data-action="parse"]');
+                const applyBtn = modal.querySelector('[data-action="apply"]');
+                const clearBtn = modal.querySelector('[data-action="clear"]');
+                const list = modal.querySelector('[data-role="list"]');
+
+                let parsedMap = {};
+
+                function open() {
+                    mask.style.display = 'flex';
+                    textarea.focus();
+                }
+
+                function close() {
+                    mask.style.display = 'none';
+                }
+
+                function renderList(map) {
+                    list.innerHTML = '';
+                    const entries = Object.entries(map);
+                    if (!entries.length) {
+                        list.innerHTML = '<div class="value-import-note">未解析到任何键值对。</div>';
+                        applyBtn.disabled = true;
+                        return;
+                    }
+                    for (const [k, v] of entries) {
+                        const item = document.createElement('div');
+                        item.className = 'value-import-item';
+                        item.innerHTML = `
+                            <label style="display:flex; align-items:center; gap:10px; cursor:pointer;">
+                                <input type="checkbox" checked data-key="${k.replaceAll('"', '&quot;')}">
+                                <span class="value-import-kv">
+                                    <span class="value-import-key">${k}</span>
+                                    <span class="value-import-val">${v}</span>
+                                </span>
+                            </label>
+                        `;
+                        list.appendChild(item);
+                    }
+                    applyBtn.disabled = false;
+                }
+
+                fab.addEventListener('click', () => {
+                    if (!ensureEditorUnlocked()) return;
+                    open();
+                });
+                closeBtn.addEventListener('click', close);
+                mask.addEventListener('click', (e) => {
+                    if (e.target === mask) close();
+                });
+
+                parseBtn.addEventListener('click', () => {
+                    parsedMap = parseValues(textarea.value);
+                    renderList(parsedMap);
+                });
+
+                applyBtn.addEventListener('click', () => {
+                    if (!ensureEditorUnlocked()) return;
+                    const checkedKeys = new Set(
+                        Array.from(list.querySelectorAll('input[type="checkbox"]'))
+                            .filter(i => i.checked)
+                            .map(i => i.getAttribute('data-key'))
+                    );
+                    const selected = {};
+                    for (const [k, v] of Object.entries(parsedMap)) {
+                        if (checkedKeys.has(k)) selected[k] = v;
+                    }
+                    const current = loadOverrides();
+                    const merged = { ...current, ...selected };
+                    applyOverrides(selected);
+                    saveOverrides(merged);
+                    close();
+                });
+
+                clearBtn.addEventListener('click', () => {
+                    if (!ensureEditorUnlocked()) return;
+                    if (!confirm('确定清除本页的本地覆盖并刷新吗？')) return;
+                    localStorage.removeItem(storageKey);
+                    location.reload();
+                });
+            }
+
+            const INSURANCE_STORAGE_KEY = storageKey + ':insurance_v1';
+
+            function safeJsonParseObject(text) {
+                const parsed = safeJsonParse(text);
+                if (!parsed.ok || !parsed.value || typeof parsed.value !== 'object') return { ok: false };
+                return { ok: true, value: parsed.value };
+            }
+
+            function parseCurrency(text) {
+                const raw = normalizeText(text);
+                if (!raw) return 0;
+                const cleaned = raw.replace(/[^\d.-]/g, '');
+                const n = Number(cleaned);
+                return Number.isFinite(n) ? n : 0;
+            }
+
+            function formatCurrency(amount) {
+                const n = Number(amount);
+                const safe = Number.isFinite(n) ? n : 0;
+                const sign = safe < 0 ? '-' : '';
+                const abs = Math.abs(Math.round(safe));
+                return sign + '$' + abs.toLocaleString('en-US');
+            }
+
+            function getInsuranceTables() {
+                const tables = Array.from(document.querySelectorAll('.insurance-section .insurance-table'));
+                let expenseTable = null;
+                let usageTable = null;
+                for (const table of tables) {
+                    const heads = Array.from(table.querySelectorAll('thead th')).map(th => normalizeText(th.textContent));
+                    if (heads.includes('月缴费额')) expenseTable = table;
+                    if (heads.includes('使用时间')) usageTable = table;
+                }
+                return { expenseTable, usageTable };
+            }
+
+            function parseInsuranceFromDom() {
+                const { expenseTable, usageTable } = getInsuranceTables();
+                const data = { expenses: [], usages: [] };
+
+                if (expenseTable) {
+                    const rows = Array.from(expenseTable.querySelectorAll('tbody tr'));
+                    for (const row of rows) {
+                        const cells = Array.from(row.querySelectorAll('td'));
+                        if (cells.length < 4) continue;
+                        const first = normalizeText(cells[0].textContent);
+                        if (first.includes('总')) continue;
+                        data.expenses.push({
+                            type: normalizeText(cells[0].textContent),
+                            monthly: parseCurrency(cells[1].textContent),
+                            yearly: parseCurrency(cells[2].textContent),
+                            coverage: normalizeText(cells[3].textContent),
+                        });
+                    }
+                }
+
+                if (usageTable) {
+                    const rows = Array.from(usageTable.querySelectorAll('tbody tr'));
+                    for (const row of rows) {
+                        const cells = Array.from(row.querySelectorAll('td'));
+                        if (cells.length < 4) continue;
+                        const first = normalizeText(cells[0].textContent);
+                        if (first.includes('总')) continue;
+                        data.usages.push({
+                            date: normalizeText(cells[0].textContent),
+                            type: normalizeText(cells[1].textContent),
+                            desc: normalizeText(cells[2].textContent),
+                            amount: parseCurrency(cells[3].textContent),
+                        });
+                    }
+                }
+
+                return data;
+            }
+
+            function loadInsurance() {
+                const raw = localStorage.getItem(INSURANCE_STORAGE_KEY);
+                if (!raw) return null;
+                const parsed = safeJsonParseObject(raw);
+                if (!parsed.ok) return null;
+                const value = parsed.value;
+                const expenses = Array.isArray(value.expenses) ? value.expenses : [];
+                const usages = Array.isArray(value.usages) ? value.usages : [];
+                return { expenses, usages };
+            }
+
+            function saveInsurance(data) {
+                localStorage.setItem(INSURANCE_STORAGE_KEY, JSON.stringify(data));
+            }
+
+            function applyInsurance(data) {
+                const { expenseTable, usageTable } = getInsuranceTables();
+                const expenses = Array.isArray(data?.expenses) ? data.expenses : [];
+                const usages = Array.isArray(data?.usages) ? data.usages : [];
+
+                if (expenseTable) {
+                    const tbody = expenseTable.querySelector('tbody');
+                    if (tbody) {
+                        tbody.innerHTML = '';
+                        let totalMonthly = 0;
+                        let totalYearly = 0;
+                        for (const row of expenses) {
+                            const type = normalizeText(row?.type);
+                            const coverage = normalizeText(row?.coverage);
+                            const monthly = Number(row?.monthly) || 0;
+                            const yearly = Number(row?.yearly) || 0;
+                            if (!type && !coverage && !monthly && !yearly) continue;
+                            totalMonthly += monthly;
+                            totalYearly += yearly;
+                            const tr = document.createElement('tr');
+                            tr.innerHTML = `
+                                <td></td>
+                                <td class="amount"></td>
+                                <td class="amount"></td>
+                                <td></td>
+                            `;
+                            const cells = tr.querySelectorAll('td');
+                            cells[0].textContent = type;
+                            cells[1].textContent = formatCurrency(monthly);
+                            cells[2].textContent = formatCurrency(yearly);
+                            cells[3].textContent = coverage;
+                            tbody.appendChild(tr);
+                        }
+                        const totalTr = document.createElement('tr');
+                        totalTr.setAttribute('style', 'background: rgba(255, 215, 0, 0.1);');
+                        totalTr.innerHTML = `
+                            <td><strong>总计</strong></td>
+                            <td class="amount"><strong>${formatCurrency(totalMonthly)}</strong></td>
+                            <td class="amount"><strong>${formatCurrency(totalYearly)}</strong></td>
+                            <td><strong>针对高风险行动的全面保障</strong></td>
+                        `;
+                        tbody.appendChild(totalTr);
+                    }
+                }
+
+                if (usageTable) {
+                    const tbody = usageTable.querySelector('tbody');
+                    if (tbody) {
+                        tbody.innerHTML = '';
+                        let total = 0;
+                        for (const row of usages) {
+                            const date = normalizeText(row?.date);
+                            const type = normalizeText(row?.type);
+                            const desc = normalizeText(row?.desc);
+                            const amount = Number(row?.amount) || 0;
+                            if (!date && !type && !desc && !amount) continue;
+                            total += amount;
+                            const tr = document.createElement('tr');
+                            tr.innerHTML = `
+                                <td></td>
+                                <td></td>
+                                <td></td>
+                                <td class="amount"></td>
+                            `;
+                            const cells = tr.querySelectorAll('td');
+                            cells[0].textContent = date;
+                            cells[1].textContent = type;
+                            cells[2].textContent = desc;
+                            cells[3].textContent = formatCurrency(amount);
+                            tbody.appendChild(tr);
+                        }
+                        const totalTr = document.createElement('tr');
+                        totalTr.setAttribute('style', 'background: rgba(255, 215, 0, 0.1);');
+                        totalTr.innerHTML = `
+                            <td><strong>总使用金额</strong></td>
+                            <td><strong>-</strong></td>
+                            <td><strong>-</strong></td>
+                            <td class="amount"><strong>${formatCurrency(total)}</strong></td>
+                        `;
+                        tbody.appendChild(totalTr);
+                    }
+                }
+            }
+
+            function buildInsuranceEditorUi() {
+                const btn = document.createElement('button');
+                btn.className = 'insurance-edit-fab';
+                btn.type = 'button';
+                btn.textContent = '编辑保险';
+
+                const mask = document.createElement('div');
+                mask.className = 'value-import-mask';
+
+                const modal = document.createElement('div');
+                modal.className = 'value-import-modal';
+                modal.innerHTML = `
+                    <div class="value-import-title">
+                        <h3>编辑保险支出 / 使用</h3>
+                        <button class="value-import-close" type="button" aria-label="close">×</button>
+                    </div>
+                    <div class="value-import-note">修改将保存在浏览器本地，仅对当前设备生效。</div>
+                    <div class="insurance-edit-section">
+                        <h4>保险支出情况</h4>
+                        <div data-role="expense-list"></div>
+                        <div class="value-import-actions">
+                            <button class="value-btn" type="button" data-action="expense-add">新增一行</button>
+                        </div>
+                    </div>
+                    <div class="insurance-edit-section">
+                        <h4>保险使用情况</h4>
+                        <div data-role="usage-list"></div>
+                        <div class="value-import-actions">
+                            <button class="value-btn" type="button" data-action="usage-add">新增一行</button>
+                        </div>
+                    </div>
+                    <div class="value-import-actions" style="justify-content:center; margin-top: 14px;">
+                        <button class="value-btn primary" type="button" data-action="save">保存并应用</button>
+                        <button class="value-btn" type="button" data-action="cancel">取消</button>
+                        <button class="value-btn danger" type="button" data-action="clear">清除本页保险编辑</button>
+                    </div>
+                `;
+
+                mask.appendChild(modal);
+                document.body.appendChild(btn);
+                document.body.appendChild(mask);
+
+                const closeBtn = modal.querySelector('.value-import-close');
+                const expenseList = modal.querySelector('[data-role="expense-list"]');
+                const usageList = modal.querySelector('[data-role="usage-list"]');
+                const expenseAdd = modal.querySelector('[data-action="expense-add"]');
+                const usageAdd = modal.querySelector('[data-action="usage-add"]');
+                const saveBtn = modal.querySelector('[data-action="save"]');
+                const cancelBtn = modal.querySelector('[data-action="cancel"]');
+                const clearBtn = modal.querySelector('[data-action="clear"]');
+
+                function open() {
+                    const base = loadInsurance() || parseInsuranceFromDom();
+                    expenseList.innerHTML = '';
+                    usageList.innerHTML = '';
+
+                    for (const row of base.expenses || []) addExpenseRow(row);
+                    if (!(base.expenses || []).length) addExpenseRow({});
+
+                    for (const row of base.usages || []) addUsageRow(row);
+                    if (!(base.usages || []).length) addUsageRow({});
+
+                    mask.style.display = 'flex';
+                }
+
+                function close() {
+                    mask.style.display = 'none';
+                }
+
+                function addExpenseRow(row) {
+                    const wrap = document.createElement('div');
+                    wrap.className = 'insurance-edit-row';
+                    wrap.innerHTML = `
+                        <input placeholder="保险类型" data-field="type">
+                        <input placeholder="月缴费额" data-field="monthly">
+                        <input placeholder="年缴费额" data-field="yearly">
+                        <input placeholder="保障范围" data-field="coverage">
+                        <button class="value-btn danger remove" type="button">删除</button>
+                    `;
+                    wrap.querySelector('[data-field="type"]').value = normalizeText(row?.type);
+                    wrap.querySelector('[data-field="monthly"]').value = row?.monthly ? String(row.monthly) : '';
+                    wrap.querySelector('[data-field="yearly"]').value = row?.yearly ? String(row.yearly) : '';
+                    wrap.querySelector('[data-field="coverage"]').value = normalizeText(row?.coverage);
+                    wrap.querySelector('.remove').addEventListener('click', () => wrap.remove());
+                    expenseList.appendChild(wrap);
+                }
+
+                function addUsageRow(row) {
+                    const wrap = document.createElement('div');
+                    wrap.className = 'insurance-edit-row usage';
+                    wrap.innerHTML = `
+                        <input placeholder="使用时间" data-field="date">
+                        <input placeholder="保险类型" data-field="type">
+                        <input placeholder="事件描述" data-field="desc">
+                        <input placeholder="使用金额" data-field="amount">
+                        <button class="value-btn danger remove" type="button">删除</button>
+                    `;
+                    wrap.querySelector('[data-field="date"]').value = normalizeText(row?.date);
+                    wrap.querySelector('[data-field="type"]').value = normalizeText(row?.type);
+                    wrap.querySelector('[data-field="desc"]').value = normalizeText(row?.desc);
+                    wrap.querySelector('[data-field="amount"]').value = row?.amount ? String(row.amount) : '';
+                    wrap.querySelector('.remove').addEventListener('click', () => wrap.remove());
+                    usageList.appendChild(wrap);
+                }
+
+                function collect() {
+                    const expenses = Array.from(expenseList.querySelectorAll('.insurance-edit-row')).map(wrap => {
+                        const type = normalizeText(wrap.querySelector('[data-field="type"]')?.value);
+                        const monthly = parseCurrency(wrap.querySelector('[data-field="monthly"]')?.value);
+                        const yearly = parseCurrency(wrap.querySelector('[data-field="yearly"]')?.value);
+                        const coverage = normalizeText(wrap.querySelector('[data-field="coverage"]')?.value);
+                        return { type, monthly, yearly, coverage };
+                    }).filter(r => r.type || r.coverage || r.monthly || r.yearly);
+
+                    const usages = Array.from(usageList.querySelectorAll('.insurance-edit-row.usage')).map(wrap => {
+                        const date = normalizeText(wrap.querySelector('[data-field="date"]')?.value);
+                        const type = normalizeText(wrap.querySelector('[data-field="type"]')?.value);
+                        const desc = normalizeText(wrap.querySelector('[data-field="desc"]')?.value);
+                        const amount = parseCurrency(wrap.querySelector('[data-field="amount"]')?.value);
+                        return { date, type, desc, amount };
+                    }).filter(r => r.date || r.type || r.desc || r.amount);
+
+                    return { expenses, usages };
+                }
+
+                btn.addEventListener('click', () => {
+                    if (!ensureEditorUnlocked()) return;
+                    open();
+                });
+                closeBtn.addEventListener('click', close);
+                cancelBtn.addEventListener('click', close);
+                mask.addEventListener('click', (e) => {
+                    if (e.target === mask) close();
+                });
+                expenseAdd.addEventListener('click', () => addExpenseRow({}));
+                usageAdd.addEventListener('click', () => addUsageRow({}));
+                saveBtn.addEventListener('click', () => {
+                    if (!ensureEditorUnlocked()) return;
+                    const data = collect();
+                    saveInsurance(data);
+                    applyInsurance(data);
+                    close();
+                });
+                clearBtn.addEventListener('click', () => {
+                    if (!ensureEditorUnlocked()) return;
+                    if (!confirm('确定清除本页保险编辑并刷新吗？')) return;
+                    localStorage.removeItem(INSURANCE_STORAGE_KEY);
+                    location.reload();
+                });
+            }
+
+            injectStyle();
+            applyOverrides(loadOverrides());
+            applyInsurance(loadInsurance() || parseInsuranceFromDom());
+            buildUi();
+            buildInsuranceEditorUi();
+        })();
     </script>
 </body>
 
